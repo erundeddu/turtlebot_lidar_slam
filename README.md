@@ -3,4 +3,4 @@
 * Winter 2021
 # Package List
 This repository consists of several ROS packages
-- PACKAGE1 - one sentence description
+- nuturle\_description - contains urdf files and basic debugging, testing, and visualization code for the robots used in ME495
