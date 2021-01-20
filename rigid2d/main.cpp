@@ -1,7 +1,7 @@
-#include <iostream>
-#include "rigid.hpp"
+#include<iostream>
+#include "rigid2d.hpp"
 
-using namespace rigid2d
+using namespace rigid2d;
 
 int main(void) 
 {
@@ -20,10 +20,10 @@ int main(void)
 	Transform2D t_ca = t_ac.inv();
 	std::cout << "Tca is " << t_ca << '\n';
 	
-	std::cout << "Enter a vector v as <vx vy> and the frame in which it is defined (a, b or c)\n"
+	std::cout << "Enter a vector v as <vx vy> and the frame in which it is defined (a, b or c)\n";
 	char frame;
 	Vector2D v;
-	std::cin >> v >> frame
+	std::cin >> v >> frame;
 	
 	if (frame == 'a')
 	{

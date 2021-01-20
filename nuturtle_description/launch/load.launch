@@ -7,9 +7,9 @@
 	
 	<!-- https://www.oreilly.com/library/view/mastering-ros-for/9781783551798/ch02s09.html 
 	 -->
+	<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" /> 
 	<group if="$(arg use_rviz)">
 		<node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
-		<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
-		<node name="rviz" pkg="rviz" type="rviz" args="$(find nuturtle_description)/config/model.rviz"/>
+		<node name="rviz" pkg="rviz" type="rviz" args="-d '$(find nuturtle_description)/config/model.rviz'"/>
 	</group>
 </launch>

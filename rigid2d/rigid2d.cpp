@@ -1,7 +1,7 @@
-#include <iostream>
-#include <ctype>
-#include <cmath>
-#include <string>
+#include<iostream>
+#include<cctype>
+#include<cmath>
+#include<string>
 #include "rigid2d.hpp"
 
 namespace rigid2d 
@@ -9,7 +9,7 @@ namespace rigid2d
 
 	std::ostream & operator<<(std::ostream & os, const Vector2D & v)
 	{
-		os << "[" << v.x << ", " << v.y << "]" << endl;
+		os << "[" << v.x << ", " << v.y << "]" << std::endl;
 		return os;
 	}
 
@@ -37,22 +37,26 @@ namespace rigid2d
 	}
 	
 	Transform2D::Transform2D()
-		: m_trans{struct Vector2D v}, m_radians{0.0}
+		: m_trans{Vector2D v}
+		, m_radians{0.0}
 	{
 	}
 	
 	explicit Transform2D::Transform2D(const Vector2D & trans)
-		: m_trans{trans}, m_radians{0.0}
+		: m_trans{trans}
+		, m_radians{0.0}
 	{
 	}
 	
 	explicit Transform2D::Transform2D(double radians)
-		: m_trans{Vector2D v}, m_radians{radians}
+		: m_trans{Vector2D v}
+		, m_radians{radians}
 	{
 	}
 	
 	Transform2D::Transform2D(const Vector2D & trans, double radians)
-		: m_trans{trans}, m_radians{radians}
+		: m_trans{trans}
+		, m_radians{radians}
 	{
 	}
 	
@@ -69,7 +73,7 @@ namespace rigid2d
 		return tf;
 	}
 	
-	Transform2D & Transform::operator*=(const Transform2D & rhs)
+	Transform2D & Transform2D::operator*=(const Transform2D & rhs)
 	{
 		m_radians += rhs.radians;
 		m_trans.x += rhs.trans.x*cos(m_radians) - rhs.trans.y*sin(m_radians);
@@ -79,7 +83,7 @@ namespace rigid2d
 	
 	std::ostream & operator<<(std::ostream & os, const Transform2D & tf)
 	{
-		os << "dtheta (degrees): " << rad2deg(tf.radians) << " dx: " << tf.trans.x << " dy: " << tf.trans.y << endl;
+		os << "dtheta (degrees): " << rad2deg(tf.radians) << " dx: " << tf.trans.x << " dy: " << tf.trans.y << std::endl;
 		return os;
 	}
 
