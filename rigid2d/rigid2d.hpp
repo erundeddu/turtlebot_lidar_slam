@@ -49,12 +49,12 @@ namespace rigid2d
     /// just to see what happens
     static_assert(almost_equal(0, 0), "is_zero failed");
     static_assert(almost_equal(0.001, 0.005, 1.0e-2), "is_zero failed");
-
+    static_assert(!almost_equal(0.01, 0.03, 1.0e-2), "is_zero failed");
     static_assert(almost_equal(deg2rad(0.0), 0.0), "deg2rad failed");
-
     static_assert(almost_equal(rad2deg(0.0), 0.0), "rad2deg failed");
-
     static_assert(almost_equal(deg2rad(rad2deg(2.1)), 2.1), "deg2rad failed");
+    static_assert(almost_equal(rad2deg(PI),180.0), "rad2deg failed");
+    static_assert(almost_equal(deg2rad(-30),-PI/6), "deg2rad failed");
 
 
     /// \brief A 2-Dimensional Vector
@@ -83,8 +83,8 @@ namespace rigid2d
     class Transform2D
     {
     private:
-    	Vector2D m_trans;
-    	double m_radians;
+    	Vector2D m_trans;  // 2D translation vector 
+    	double m_radians;  // rotation angle about the z axis in radians
     public:
         /// \brief Create an identity transformation
         Transform2D();
