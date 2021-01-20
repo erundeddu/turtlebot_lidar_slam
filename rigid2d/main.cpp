@@ -6,9 +6,11 @@ using namespace rigid2d;
 int main(void) 
 {
 	std::cout << "Enter transform Tab as <dtheta(degrees) dx dy>\n";
-	std::cin >> Transform2D t_ab;
+	Transform2D t_ab;
+	std::cin >> t_ab;
 	std::cout << "Enter transform Tbc as <dtheta(degrees) dx dy>\n";
-	std::cin >> Transform2D t_bc;
+	Transform2D t_bc;
+	std::cin >> t_bc;
 	std::cout << "Tab is " << t_ab << '\n';
 	Transform2D t_ba = t_ab.inv();
 	std::cout << "Tba is " << t_ba << '\n';

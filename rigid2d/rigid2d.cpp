@@ -37,19 +37,19 @@ namespace rigid2d
 	}
 	
 	Transform2D::Transform2D()
-		: m_trans{Vector2D v}
+		: m_trans{}
 		, m_radians{0.0}
 	{
 	}
 	
-	explicit Transform2D::Transform2D(const Vector2D & trans)
+	Transform2D::Transform2D(const Vector2D & trans)
 		: m_trans{trans}
 		, m_radians{0.0}
 	{
 	}
 	
-	explicit Transform2D::Transform2D(double radians)
-		: m_trans{Vector2D v}
+	Transform2D::Transform2D(double radians)
+		: m_trans{}
 		, m_radians{radians}
 	{
 	}
@@ -75,15 +75,15 @@ namespace rigid2d
 	
 	Transform2D & Transform2D::operator*=(const Transform2D & rhs)
 	{
-		m_radians += rhs.radians;
-		m_trans.x += rhs.trans.x*cos(m_radians) - rhs.trans.y*sin(m_radians);
-		m_trans.y += rhs.trans.x*sin(m_radians) + rhs.trans.y*cos(m_radians);
-		return this;
+		m_radians += rhs.m_radians;
+		m_trans.x += rhs.m_trans.x*cos(m_radians) - rhs.m_trans.y*sin(m_radians);
+		m_trans.y += rhs.m_trans.x*sin(m_radians) + rhs.m_trans.y*cos(m_radians);
+		return *this;
 	}
 	
 	std::ostream & operator<<(std::ostream & os, const Transform2D & tf)
 	{
-		os << "dtheta (degrees): " << rad2deg(tf.radians) << " dx: " << tf.trans.x << " dy: " << tf.trans.y << std::endl;
+		os << "dtheta (degrees): " << rad2deg(tf.m_radians) << " dx: " << tf.m_trans.x << " dy: " << tf.m_trans.y << std::endl;
 		return os;
 	}
 
@@ -93,11 +93,17 @@ namespace rigid2d
 		if (!(isdigit(ch1)))
 		{
 			std::string s;
-			is >> s >> s >> deg2rad(tf.radians) >> s >> tf.trans.x >> s >> tf.trans.y;
+			Vector2D trans;
+			double degrees;
+			is >> s >> s >> degrees >> s >> trans.x >> s >> trans.y;
+			tf(trans, deg2rad(degrees));
 		}
 		else
 		{
-			is >> deg2rad(tf.radians) >> tf.trans.x >> tf.trans.y;
+			Vector2D trans;
+			double degrees;
+			is >> degrees >> trans.x >> trans.y;
+			tf(trans, deg2rad(degrees));
 		}
 		return is;
 	}

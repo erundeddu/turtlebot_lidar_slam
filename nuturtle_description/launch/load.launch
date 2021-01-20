@@ -1,12 +1,9 @@
 <?xml version="1.0"?>
 <launch>
 	<arg name="use_rviz" default="true" doc="if true, view turtlebot3_burger URDF in rviz" />
-	<param name="use_gui" value="true" />
 	<param name="robot_description" command="$(find xacro)/xacro $(find nuturtle_description)/urdf/turtlebot3_burger.urdf.xacro" /> 
-	<rosparam command="load" file="$(find nuturtle_description)/config/diff_params.yaml" />  <!--http://wiki.ros.org/roslaunch/XML/rosparam-->
+	<rosparam command="load" file="$(find nuturtle_description)/config/diff_params.yaml" />  <!--source: http://wiki.ros.org/roslaunch/XML/rosparam-->
 	
-	<!-- https://www.oreilly.com/library/view/mastering-ros-for/9781783551798/ch02s09.html 
-	 -->
 	<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" /> 
 	<group if="$(arg use_rviz)">
 		<node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
