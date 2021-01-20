@@ -14,7 +14,8 @@ namespace rigid2d
 	}
 
 	std::istream & operator>>(std::istream & is, Vector2D & v)
-	{
+	{//TODO
+		/*
 		char ch1 = is.peek();
 		if (!(isdigit(ch1)))
 		{
@@ -32,8 +33,9 @@ namespace rigid2d
 		{
 			ch1 = is.get();
 		}
+		*/
+		is >> v.x >> v.y;
 		return is;
-		//TODO
 	}
 	
 	Transform2D::Transform2D()
@@ -88,7 +90,8 @@ namespace rigid2d
 	}
 
 	std::istream & operator>>(std::istream & is, Transform2D & tf)
-	{
+	{//TODO
+		/*
 		char ch1 = is.peek;
 		if (!(isdigit(ch1)))
 		{
@@ -105,6 +108,13 @@ namespace rigid2d
 			is >> degrees >> trans.x >> trans.y;
 			tf(trans, deg2rad(degrees));
 		}
+		*/
+		Vector2D trans;
+		double degrees;
+		is >> degrees >> trans.x >> trans.y;
+		Transform2D tnew(trans, deg2rad(degrees));
+		tf *= tf.inv();
+		tf *= tnew;
 		return is;
 	}
 	
