@@ -14,7 +14,7 @@ namespace rigid2d
 	}
 
 	std::istream & operator>>(std::istream & is, Vector2D & v)
-	{//TODO
+	{//TODO: Edge cases
 		/*
 		char ch1 = is.peek();
 		if (!(isdigit(ch1)))
@@ -36,6 +36,17 @@ namespace rigid2d
 		*/
 		is >> v.x >> v.y;
 		return is;
+	}
+	
+	Vector2D & Vector2D::normalize()
+	{
+		double mag = sqrt(x*x + y*y);
+		if (!(almost_equal(mag, 0.0)))
+		{
+			x *= (1/mag);
+			y *= (1/mag);
+		}	
+		return *this;
 	}
 	
 	Transform2D::Transform2D()
@@ -75,6 +86,13 @@ namespace rigid2d
 		return tf;
 	}
 	
+	Twist2D Transform2D::change_twist_frame(const Twist2D & tw) const
+	{
+		Vector2D v{tw.m_rot_v*m_trans.y + tw.m_trans_v.x*cos(m_radians) - tw.m_trans_v.y*sin(m_radians), -tw.m_rot_v*m_trans.x + tw.m_trans_v.x*sin(m_radians) + tw.m_trans_v.y*cos(m_radians)};
+		Twist2D twout(v, tw.m_rot_v);
+		return twout;
+	} 
+	
 	Transform2D & Transform2D::operator*=(const Transform2D & rhs)
 	{
 		m_radians += rhs.m_radians;
@@ -90,7 +108,7 @@ namespace rigid2d
 	}
 
 	std::istream & operator>>(std::istream & is, Transform2D & tf)
-	{//TODO
+	{//TODO: edge cases and better solution
 		/*
 		char ch1 = is.peek;
 		if (!(isdigit(ch1)))
@@ -123,6 +141,48 @@ namespace rigid2d
 		lhs *= rhs;
 		return lhs;
 	}
+	
+	Twist2D::Twist2D()
+		: m_trans_v{}
+		, m_rot_v{0.0}
+	{
+	}
+	
+	Twist2D::Twist2D(const Vector2D & trans_v)
+		: m_trans_v{trans_v}
+		, m_rot_v{0.0}
+	{
+	}
+	
+	Twist2D::Twist2D(double rot_v)
+		: m_trans_v{}
+		, m_rot_v{rot_v}
+	{
+	}
+	
+	Twist2D::Twist2D(const Vector2D & trans_v, double rot_v)
+		: m_trans_v{trans_v}
+		, m_rot_v{rot_v}
+	{
+	}
+	
+	std::ostream & operator<<(std::ostream & os, const Twist2D & tw)
+	{
+		os << "w (radians/time): " << tw.m_rot_v << " x_dot: " << tw.m_trans_v.x << " y_dot: " << tw.m_trans_v.y << std::endl;
+		return os;
+	}
+	
+	std::istream & operator>>(std::istream & is, Twist2D & tw)
+	{//TODO: edge cases and finish implementation
+		Vector2D trans_v;
+		double rot_v;
+		is >> rot_v >> trans_v.x >> trans_v.y;
+		Twist2D twnew(trans_v, rot_v);
+		//tw *= tw.inv();
+		//tw *= twnew;
+		return is;
+	}
+
 		
 }	
 

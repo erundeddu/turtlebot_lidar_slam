@@ -62,6 +62,10 @@ namespace rigid2d
     {
         double x = 0.0;
         double y = 0.0;
+        
+        /// \brief make the Vector2D instance a unit vector if not zero and return it
+        /// \return the normalized Vector2D instance 
+        Vector2D & normalize();
     };
 
     /// \brief output a 2 dimensional vector as [xcomponent ycomponent]
@@ -78,6 +82,9 @@ namespace rigid2d
     /// https://en.cppreference.com/w/cpp/io/basic_istream/peek
     /// https://en.cppreference.com/w/cpp/io/basic_istream/get
     std::istream & operator>>(std::istream & is, Vector2D & v);
+    
+    /// Forward declaration of Twist2D
+    class Twist2D;
 
     /// \brief a rigid body transformation in 2 dimensions
     class Transform2D
@@ -100,7 +107,7 @@ namespace rigid2d
         /// \brief Create a transformation with a translational and rotational
         /// component
         /// \param trans - the translation
-        /// \param rot - the rotation, in radians
+        /// \param radians - the rotation, in radians
         Transform2D(const Vector2D & trans, double radians);
 
         /// \brief apply a transformation to a Vector2D
@@ -111,7 +118,12 @@ namespace rigid2d
         /// \brief invert the transformation
         /// \return the inverse transformation. 
         Transform2D inv() const;
-
+        
+        /// \brief Convert twist to a different reference frame using the adjoint of the object's transformation
+        /// \param twist - the twist to convert
+        /// \return a twist in the new reference frame
+        Twist2D change_twist_frame(const Twist2D & tw) const; 
+        
         /// \brief compose this transform with another and store the result 
         /// in this object
         /// \param rhs - the first transform to apply
@@ -142,6 +154,48 @@ namespace rigid2d
     /// \return the composition of the two transforms
     /// HINT: This function should be implemented in terms of *=
     Transform2D operator*(Transform2D lhs, const Transform2D & rhs);
+    
+    /// \brief a twist in 2 dimensions
+    class Twist2D
+    {
+    private:
+    	Vector2D m_trans_v;  // 2D translational velocity vector
+    	double m_rot_v;  // rotational velocity about the z axis (in radians/time)
+    	friend class Transform2D;  // allow Transform2D to access the private members of Twist2D
+	public:
+		/// \brief Create a 0 velocity twist
+        Twist2D();
+
+        /// \brief create a twist that is a pure translational velocity vector
+        /// \param trans_v - the translational velocity vector
+        explicit Twist2D(const Vector2D & trans_v);
+
+        /// \brief create a twist that is a pure rotational velocity
+        /// \param rot_v - the rotational velocity (in radians/time)
+        explicit Twist2D(double rot_v);
+
+        /// \brief Create a twist with a translational and rotational
+        /// component
+        /// \param trans_v - the translational velocity 
+        /// \param rot_v - the rotational velocity (in radians/time)
+        Twist2D(const Vector2D & trans_v, double rot_v);
+        
+		/// \brief \see operator<<(...) (declared outside this class)
+        /// for a description
+        friend std::ostream & operator<<(std::ostream & os, const Twist2D & tw);
+    };
+
+    /// \brief should print a human readable version of the twist
+    /// An example output:
+    /// w: 2 x_dot: 3 y_dot: 5
+    /// \param os - an output stream
+    /// \param tw - the twist to print
+    std::ostream & operator<<(std::ostream & os, const Twist2D & tw);
+    
+    /// \brief Read a twist from stdin
+    /// Should be able to read input either as output by operator<< or
+    /// as 3 numbers (w, x_dot, y_dot) separated by spaces or newlines
+    std::istream & operator>>(std::istream & is, Twist2D & tw);
 }
 
 #endif
