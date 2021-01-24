@@ -5,6 +5,9 @@
 #include "geometry_msgs/Twist.h"
 #include "turtlesim/Pose.h"
 #include "trect/start.h"
+#include "std_srvs/Empty.h"
+#include "turtlesim/SetPen.h"
+#include "turtlesim/TeleportAbsolute.h"
 
 class TurtleRect:
 {
@@ -126,8 +129,51 @@ class TurtleRect:
 			m_y_rect = req.y_rect;
 			m_width = req.width;
 			m_height = req.height;
-			//TODO clear
-			//TODO draw rectangle
+			
+			ros::ServiceClient clearClient = nh.serviceClient<std_srvs::Empty>("clear");  // source: https://www.cse.sc.edu/~jokane/agitr/agitr-small.pdf
+			std_srvs::Empty::Request req_clear;
+			std_srvs::Empty::Response res_clear;
+			bool success;
+			success = clearClient.call(req_clear, res_clear);
+			
+			ros::ServiceClient setpenClient = nh.serviceClient<turtlesim::SetPen>("turtle1/set_pen");
+			turtlesim::SetPen::Request req_setpen;
+			turtlesim::SetPen::Response res_setpen;
+			req_setpen.r = 255;
+			req_setpen.g = 255;
+			req_setpen.b = 255;
+			req_setpen.width = 1;
+			req_setpen.off = 1;
+			success = clearClient.call(req_setpen, res_setpen);
+			
+			ros::ServiceClient teleportabsClient = nh.serviceClient<turtlesim::TeleportAbsolute>("turtle1/teleport_absolute");
+			turtlesim::TeleportAbsolute::Request req_telepabs;
+			turtlesim::TeleportAbsolute::Response res_telepabs;
+			req_telepabs.x = m_x_rect;
+			req_telepabs.y = m_y_rect;
+			req_telepabs.theta = 0.0;
+			success = teleportabsClient.call(req_telepabs, res_telepabs);
+			
+			req_setpen.off = 0;
+			success = clearClient.call(req_setpen, res_setpen);
+			
+			req_telepabs.x = m_x_rect + m_width;
+			success = teleportabsClient.call(req_telepabs, res_telepabs);
+			
+			req_telepabs.y = m_y_rect + m_height;
+			success = teleportabsClient.call(req_telepabs, res_telepabs);
+			
+			req_telepabs.x = m_x_rect;
+			success = teleportabsClient.call(req_telepabs, res_telepabs);
+			
+			req_telepabs.y = m_y_rect;
+			success = teleportabsClient.call(req_telepabs, res_telepabs);
+			
+			req_setpen.r = 0;
+			req_setpen.g = 0;
+			req_setpen.b = 0;
+			success = clearClient.call(req_setpen, res_setpen);
+			
 			++m_stage;
 		}
 			
