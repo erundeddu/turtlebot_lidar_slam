@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>trect</name>
+  <version>1.0.0</version>
+  <description>Allows movement of a turtle in the turtle simulator in a rectangular trajectory</description>
+  <maintainer email="edoardorundeddu2021@u.northwestern.edu">Edoardo Rundeddu</maintainer>
+  <license>Apache License 2.0</license>
+  <author email="edoardorundeddu2021@u.northwestern.edu">Edoardo Rundeddu</author>
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>roscpp</depend>
+</package>
