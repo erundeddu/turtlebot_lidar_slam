@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+	<param name="max_xdot" value="2.0" type="double"/>
+	<param name="max_wdot" value="1.0" type="double"/>
+	<param name="frequency" value="100" type="double"/>	
+	<node name="turtlesim" pkg="turtlesim" type="turtlesim_node" /> 
+	<node name="turtle_rect" pkg="trect" type="turtle_rect" output="screen"/>
+</launch>
