@@ -47,7 +47,7 @@ namespace rigid2d
 			y *= (1/mag);
 		}	
 		return *this;
-	}
+	} s
 	
 	Transform2D::Transform2D()
 		: m_trans{}
