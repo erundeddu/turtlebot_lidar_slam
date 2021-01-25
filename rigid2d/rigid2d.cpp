@@ -47,7 +47,7 @@ namespace rigid2d
 			y *= (1/mag);
 		}	
 		return *this;
-	} s
+	}
 	
 	Transform2D::Transform2D()
 		: m_trans{}
@@ -131,8 +131,7 @@ namespace rigid2d
 		double degrees;
 		is >> degrees >> trans.x >> trans.y;
 		Transform2D tnew(trans, deg2rad(degrees));
-		tf *= tf.inv();
-		tf *= tnew;
+		tf = tnew;
 		return is;
 	}
 	
@@ -178,8 +177,7 @@ namespace rigid2d
 		double rot_v;
 		is >> rot_v >> trans_v.x >> trans_v.y;
 		Twist2D twnew(trans_v, rot_v);
-		//tw *= tw.inv();
-		//tw *= twnew;
+		tw = twnew;
 		return is;
 	}
 

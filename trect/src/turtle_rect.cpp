@@ -46,7 +46,7 @@ void callback(const turtlesim::Pose::ConstPtr& msg)
 /// \param req - service request package of type trect::start::Request (containing x,y position of the rectangle sw corner, width and height)
 /// \param res - service response package of type trect::start::Response (empty)
 /// \return true if all services were successfully called, else false
-bool start_method(trect::start::Request & req, trect::start::Response & res)
+bool start_method(trect::start::Request & req, trect::start::Response &)
 {
 	ros::NodeHandle n;
 	x_rect = req.x_rect;
