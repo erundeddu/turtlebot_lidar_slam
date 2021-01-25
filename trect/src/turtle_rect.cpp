@@ -1,3 +1,17 @@
+/// \file
+/// \brief A ROS node to make a turtlesim turtle move along a rectanglular path
+///
+/// PARAMETERS:
+///     max_xdot (double): maximum translational speed of the turtle
+///		max_wdot (double): maximum rotational speed of the turtle
+///		frequency (double): number of control loops executed per second
+/// PUBLISHES:
+///     turtle1/cmd_vel (geometry_msgs::Twist): translational and rotational velocities of the turtle, 6DOF
+/// SUBSCRIBES:
+///     turtle1/pose (turtlesim::Pose): 2D position and heading angle of the turtle
+/// SERVICES:
+///     /start (trect::start): clears turtlesim background, draws a rectangular path, causes the turtle to start following the path.
+
 #include <iostream>
 #include <string>
 #include <cmath>
@@ -10,7 +24,6 @@
 #include "turtlesim/TeleportAbsolute.h"
 #include "std_msgs/String.h"
 
-
 static double x;
 static double y;
 static double theta;
@@ -20,6 +33,8 @@ static double width;
 static double height;
 static int stage = 0;
 
+/// \brief transfers turtle pose from subscribed topic to file global variables
+/// \param msg - pointer to a turtlesim::Pose message
 void callback(const turtlesim::Pose::ConstPtr& msg)
 {
 	x = msg->x;
@@ -27,9 +42,13 @@ void callback(const turtlesim::Pose::ConstPtr& msg)
 	theta = msg->theta;
 }
 
+/// \brief clears turtlesim background, draws rectangular path based on user input in the request, causes the turtle to begin following the path
+/// \param req - service request package of type trect::start::Request (containing x,y position of the rectangle sw corner, width and height)
+/// \param res - service response package of type trect::start::Response (empty)
+/// \return true if all services were successfully called, else false
 bool start_method(trect::start::Request & req, trect::start::Response & res)
 {
-	ros::NodeHandle n;  //TODO: should a new NodeHandle be used?ros
+	ros::NodeHandle n;
 	x_rect = req.x_rect;
 	y_rect = req.y_rect;
 	width = req.width;
@@ -42,6 +61,7 @@ bool start_method(trect::start::Request & req, trect::start::Response & res)
 	if (!clearClient.call(req_clear, res_clear))
 	{
 		ROS_ERROR("Failed to call /clear");
+		return false;
 	}
 	
 	ros::ServiceClient setpenClient = n.serviceClient<turtlesim::SetPen>("turtle1/set_pen");
@@ -56,6 +76,7 @@ bool start_method(trect::start::Request & req, trect::start::Response & res)
 	if (!setpenClient.call(req_setpen, res_setpen))
 	{
 		ROS_ERROR("Failed to call /set_pen");
+		return false;
 	}
 	
 	ros::ServiceClient teleportabsClient = n.serviceClient<turtlesim::TeleportAbsolute>("turtle1/teleport_absolute");
@@ -68,30 +89,35 @@ bool start_method(trect::start::Request & req, trect::start::Response & res)
 	if (!teleportabsClient.call(req_telepabs, res_telepabs))
 	{
 		ROS_ERROR("Failed to call /teleport_absolute");
+		return false;
 	}
 	
 	req_setpen.off = 0;
 	if (!setpenClient.call(req_setpen, res_setpen))
 	{
 		ROS_ERROR("Failed to call /set_pen");
+		return false;
 	}
 	
 	req_telepabs.x = x_rect + width;
 	if (!teleportabsClient.call(req_telepabs, res_telepabs))
 	{
 		ROS_ERROR("Failed to call /teleport_absolute");
+		return false;
 	}
 	
 	req_telepabs.y = y_rect + height;
 	if (!teleportabsClient.call(req_telepabs, res_telepabs))
 	{
 		ROS_ERROR("Failed to call /teleport_absolute");
+		return false;
 	}
 	
 	req_telepabs.x = x_rect;
 	if (!teleportabsClient.call(req_telepabs, res_telepabs))
 	{
 		ROS_ERROR("Failed to call /teleport_absolute");
+		return false;
 	}
 	
 	req_telepabs.y = y_rect;
@@ -103,19 +129,28 @@ bool start_method(trect::start::Request & req, trect::start::Response & res)
 	if(!setpenClient.call(req_setpen, res_setpen))
 	{
 		ROS_ERROR("Failed to call /set_pen");
+		return false;
 	}
 	
 	stage = 1;
 	return true;
 }
 
+/// \brief approximately compare two floating-point numbers using
+///        an absolute comparison
+/// \param d1 - a number to compare
+/// \param d2 - a second number to compare
+/// \param epsilon - absolute threshold required for equality
+/// \return true if abs(d1 - d2) < epsilon
 bool almost_equal(const double d1, const double d2, const double epsilon=1.0e-2)
 {
 	return (fabs(d1-d2) < epsilon); 
 }
 
-const double PI=3.14159265358979323846;
-
+/// \brief initializes the ros node and contains the logic for the main state loop
+/// \param argc - number of command line arguments passed
+/// \param argv - pointer to command line arguments passed
+/// \return 0
 int main(int argc, char *argv[])
 {
 	ros::init(argc, argv, "turtle_rect");
@@ -123,7 +158,7 @@ int main(int argc, char *argv[])
 	
 	const auto sub = nh.subscribe("turtle1/pose", 1000, callback);
 	const auto pub = nh.advertise<geometry_msgs::Twist>("turtle1/cmd_vel", 1000);
-	ros::ServiceServer start = nh.advertiseService("trect/start", start_method);
+	ros::ServiceServer start = nh.advertiseService("start", start_method);
 	
 	double max_xdot;
     double max_wdot;
@@ -149,6 +184,7 @@ int main(int argc, char *argv[])
 	ROS_INFO("%s", msg.data.c_str());
 
 	ros::Rate r(frequency);
+	const double PI=3.14159265358979323846;
 	
 	while(ros::ok())
 	{
