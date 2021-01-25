@@ -1,5 +1,5 @@
-double x_rect
-double y_rect
-double width
-double height
+float32 x_rect
+float32 y_rect
+float32 width
+float32 height
 ---
