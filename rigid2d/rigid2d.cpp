@@ -75,13 +75,13 @@ namespace rigid2d
 	
 	Vector2D Transform2D::operator()(Vector2D v) const
 	{
-		Vector2D vout{v.x*cos(m_radians) - v.y*sin(m_radians) + m_trans.x, v.y*sin(m_radians) + v.y*cos(m_radians) + m_trans.y};
+		Vector2D vout{v.x*cos(m_radians) - v.y*sin(m_radians) + m_trans.x, v.y*cos(m_radians) + v.x*sin(m_radians) + m_trans.y};
 		return vout;
 	}
 	
 	Transform2D Transform2D::inv() const
 	{	
-		Vector2D v{m_trans.x*cos(m_radians) + m_trans.y*sin(m_radians), m_trans.y*cos(m_radians) - m_trans.x*sin(m_radians)};
+		Vector2D v{-m_trans.x*cos(m_radians) - m_trans.y*sin(m_radians), - m_trans.y*cos(m_radians) + m_trans.x*sin(m_radians)};
 		Transform2D tf(v, -m_radians);
 		return tf;
 	}
@@ -95,9 +95,9 @@ namespace rigid2d
 	
 	Transform2D & Transform2D::operator*=(const Transform2D & rhs)
 	{
-		m_radians += rhs.m_radians;
 		m_trans.x += rhs.m_trans.x*cos(m_radians) - rhs.m_trans.y*sin(m_radians);
 		m_trans.y += rhs.m_trans.x*sin(m_radians) + rhs.m_trans.y*cos(m_radians);
+		m_radians += rhs.m_radians;
 		return *this;
 	}
 	
