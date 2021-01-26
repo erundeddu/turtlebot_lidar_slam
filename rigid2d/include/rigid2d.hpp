@@ -109,6 +109,22 @@ namespace rigid2d
         /// \param trans - the translation
         /// \param radians - the rotation, in radians
         Transform2D(const Vector2D & trans, double radians);
+        
+        /// \brief get the translation component in the x direction
+        /// \returns the translation component in the x direction
+        double getX() const;
+        
+        /// \brief get the translation component in the y direction
+        /// \returns the translation component in the y direction
+        double getY() const;
+        
+        /// \brief get the sin of the rotation angle
+        /// \returns the sin of the rotation angle
+        double getStheta() const;
+        
+        /// \brief get the cos of the rotation angle
+        /// \returns the cos of the rotation angle
+        double getCtheta() const;
 
         /// \brief apply a transformation to a Vector2D
         /// \param v - the vector to transform
@@ -173,6 +189,18 @@ namespace rigid2d
         /// \brief create a twist that is a pure rotational velocity
         /// \param rot_v - the rotational velocity (in radians/time)
         explicit Twist2D(double rot_v);
+        
+        /// \brief get the x linear component of the 2D twist
+        /// \returns the x linear component of the 2D twist
+        double getVx() const;
+        
+        /// \brief get the y linear component of the 2D twist
+        /// \returns the y linear component of the 2D twist
+		double getVy() const;
+		
+		/// \brief get the rotational component of the 2D twist
+        /// \returns the rotational component of the 2D twist
+		double getW() const;
 
         /// \brief Create a twist with a translational and rotational
         /// component

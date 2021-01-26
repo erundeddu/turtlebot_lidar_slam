@@ -14,26 +14,8 @@ namespace rigid2d
 	}
 
 	std::istream & operator>>(std::istream & is, Vector2D & v)
-	{//TODO: Edge cases
-		/*
-		char ch1 = is.peek();
-		if (!(isdigit(ch1)))
-		{
-			ch1 = is.get();
-		}
-		is >> v.x;
-		ch1 = is.peek();
-		if (!(isdigit(ch1)))
-		{
-			ch1 = is.get();
-		}
-		is >> v.y;
-		ch1 = is.peek();
-		if (ch1 == ']')
-		{
-			ch1 = is.get();
-		}
-		*/
+	{
+		//TODO: add check if we have non numeric start
 		is >> v.x >> v.y;
 		return is;
 	}
@@ -71,6 +53,26 @@ namespace rigid2d
 		: m_trans{trans}
 		, m_radians{radians}
 	{
+	}
+	
+	double Transform2D::getX() const
+	{
+		return m_trans.x;
+	}
+        
+    double Transform2D::getY() const
+    {
+		return m_trans.y;
+	}
+    
+    double Transform2D::getStheta() const
+    {
+		return sin(m_radians);
+	}
+    
+    double Transform2D::getCtheta() const
+    {
+		return cos(m_radians);
 	}
 	
 	Vector2D Transform2D::operator()(Vector2D v) const
@@ -163,6 +165,21 @@ namespace rigid2d
 		: m_trans_v{trans_v}
 		, m_rot_v{rot_v}
 	{
+	}
+	
+	double Twist2D::getVx() const
+	{
+		return m_trans_v.x;
+	}
+        
+    double Twist2D::getVy() const
+    {
+		return m_trans_v.y;
+	}
+	
+	double Twist2D::getW() const
+    {
+		return m_rot_v;
 	}
 	
 	std::ostream & operator<<(std::ostream & os, const Twist2D & tw)
