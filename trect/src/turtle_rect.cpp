@@ -32,6 +32,9 @@ static double y_rect;
 static double width;
 static double height;
 static int stage = 0;
+static ros::ServiceClient clearClient;
+static ros::ServiceClient setpenClient;
+static ros::ServiceClient teleportabsClient;
 
 /// \brief transfers turtle pose from subscribed topic to file global variables
 /// \param msg - pointer to a turtlesim::Pose message
@@ -48,13 +51,11 @@ void callback(const turtlesim::Pose::ConstPtr& msg)
 /// \return true if all services were successfully called, else false
 bool start_method(trect::start::Request & req, trect::start::Response &)
 {
-	ros::NodeHandle n;
 	x_rect = req.x_rect;
 	y_rect = req.y_rect;
 	width = req.width;
 	height = req.height;
 	
-	ros::ServiceClient clearClient = n.serviceClient<std_srvs::Empty>("clear");  // source: https://www.cse.sc.edu/~jokane/agitr/agitr-small.pdf
 	std_srvs::Empty::Request req_clear;
 	std_srvs::Empty::Response res_clear;
 	
@@ -64,7 +65,6 @@ bool start_method(trect::start::Request & req, trect::start::Response &)
 		return false;
 	}
 	
-	ros::ServiceClient setpenClient = n.serviceClient<turtlesim::SetPen>("turtle1/set_pen");
 	turtlesim::SetPen::Request req_setpen;
 	turtlesim::SetPen::Response res_setpen;
 	req_setpen.r = 255;
@@ -79,7 +79,6 @@ bool start_method(trect::start::Request & req, trect::start::Response &)
 		return false;
 	}
 	
-	ros::ServiceClient teleportabsClient = n.serviceClient<turtlesim::TeleportAbsolute>("turtle1/teleport_absolute");
 	turtlesim::TeleportAbsolute::Request req_telepabs;
 	turtlesim::TeleportAbsolute::Response res_telepabs;
 	req_telepabs.x = x_rect;
@@ -159,6 +158,10 @@ int main(int argc, char *argv[])
 	const auto sub = nh.subscribe("turtle1/pose", 1000, callback);
 	const auto pub = nh.advertise<geometry_msgs::Twist>("turtle1/cmd_vel", 1000);
 	ros::ServiceServer start = nh.advertiseService("start", start_method);
+	
+	clearClient = nh.serviceClient<std_srvs::Empty>("clear");  // source: https://www.cse.sc.edu/~jokane/agitr/agitr-small.pdf
+	setpenClient = nh.serviceClient<turtlesim::SetPen>("turtle1/set_pen");
+	teleportabsClient = nh.serviceClient<turtlesim::TeleportAbsolute>("turtle1/teleport_absolute");
 	
 	double max_xdot;
     double max_wdot;
