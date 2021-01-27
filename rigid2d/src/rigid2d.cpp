@@ -2,7 +2,7 @@
 #include<cctype>
 #include<cmath>
 #include<string>
-#include "rigid2d.hpp"
+#include "rigid2d/rigid2d.hpp"
 
 namespace rigid2d 
 {
