@@ -1,5 +1,5 @@
 #include<iostream>
-#include "rigid2d.hpp"
+#include "rigid2d/rigid2d.hpp"
 
 using namespace rigid2d;
 
