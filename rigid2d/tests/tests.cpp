@@ -95,6 +95,21 @@ TEST_CASE("Input a Transform from istream","[input]"){ // Nathaniel, Nyberg
     REQUIRE(almost_equal(trans.getY(),3));
 }
 
+TEST_CASE("Input a Transform from istream, cout format","[input]"){ // Edoardo, Rundeddu
+    using namespace rigid2d;
+
+    Transform2D trans;
+
+    std::unique_ptr<std::istream> is;
+    is = std::make_unique<std::istringstream>(std::istringstream{"dtheta (degrees): -30 dx: 2 dy: 3"});
+    *is >> trans;
+
+    REQUIRE(almost_equal(trans.getCtheta(),cos(deg2rad(-30))));
+    REQUIRE(almost_equal(trans.getStheta(),sin(deg2rad(-30))));
+    REQUIRE(almost_equal(trans.getX(),2));
+    REQUIRE(almost_equal(trans.getY(),3));
+}
+
 TEST_CASE("Outpt a Transform to ostream","[output]"){ // Nathaniel, Nyberg
     using namespace rigid2d;
 

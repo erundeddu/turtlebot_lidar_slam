@@ -1,4 +1,5 @@
 #include<iostream>
+#include<sstream>
 #include<cctype>
 #include<cmath>
 #include<string>
@@ -14,9 +15,26 @@ namespace rigid2d
 	}
 
 	std::istream & operator>>(std::istream & is, Vector2D & v)
-	{
-		//TODO: add check if we have non numeric start
-		is >> v.x >> v.y;
+	{	
+		char ch = is.peek();
+		while ((ch == ' ') || (ch == '\n'))
+		{
+			ch = is.get();
+			ch = is.peek();
+		}
+		ch = is.peek();
+		if (ch == '[')
+		{
+			ch = is.get();  // eliminate [
+			is >> v.x;
+			ch = is.get();  // eliminate ,
+			is >> v.y; 
+			ch = is.get();  // eliminate ]
+		}
+		else
+		{
+			is >> v.x >> v.y;
+		}
 		return is;
 	}
 	
@@ -110,28 +128,25 @@ namespace rigid2d
 	}
 
 	std::istream & operator>>(std::istream & is, Transform2D & tf)
-	{//TODO: edge cases and better solution
-		/*
-		char ch1 = is.peek;
-		if (!(isdigit(ch1)))
+	{
+		char ch = is.peek();
+		while ((ch == ' ') || (ch == '\n'))
 		{
-			std::string s;
-			Vector2D trans;
-			double degrees;
-			is >> s >> s >> degrees >> s >> trans.x >> s >> trans.y;
-			tf(trans, deg2rad(degrees));
+			ch = is.get();
+			ch = is.peek();
 		}
-		else
-		{
-			Vector2D trans;
-			double degrees;
-			is >> degrees >> trans.x >> trans.y;
-			tf(trans, deg2rad(degrees));
-		}
-		*/
+		ch = is.peek();
+		std::string str;
 		Vector2D trans;
 		double degrees;
-		is >> degrees >> trans.x >> trans.y;
+		if (ch == 'd')  // cout format
+		{
+			is >> str >> str >> degrees >> str >> trans.x >> str >> trans.y;
+		}
+		else  // space separated format
+		{
+			is >> degrees >> trans.x >> trans.y;
+		}
 		Transform2D tnew(trans, deg2rad(degrees));
 		tf = tnew;
 		return is;
@@ -189,10 +204,25 @@ namespace rigid2d
 	}
 	
 	std::istream & operator>>(std::istream & is, Twist2D & tw)
-	{//TODO: edge cases and finish implementation
+	{
+		char ch = is.peek();
+		while ((ch == ' ') || (ch == '\n'))
+		{
+			ch = is.get();
+			ch = is.peek();
+		}
+		ch = is.peek();
+		std::string str;
 		Vector2D trans_v;
 		double rot_v;
-		is >> rot_v >> trans_v.x >> trans_v.y;
+		if (ch == 'w')  // cout format
+		{
+			is >> str >> str >> rot_v >> str >> trans_v.x >> str >> trans_v.y;
+		}
+		else  // space separated format
+		{
+			is >> rot_v >> trans_v.x >> trans_v.y;
+		}
 		Twist2D twnew(trans_v, rot_v);
 		tw = twnew;
 		return is;
