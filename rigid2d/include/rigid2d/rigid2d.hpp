@@ -60,8 +60,10 @@ namespace rigid2d
     /// \brief A 2-Dimensional Vector
     struct Vector2D
     {
+    	/// x component of vector
         double x = 0.0;
-        double y = 0.0;
+        /// y component of vector  
+        double y = 0.0;  
         
         /// \brief make the Vector2D instance a unit vector if not zero and return it
         /// \return the normalized Vector2D instance 
@@ -90,8 +92,10 @@ namespace rigid2d
     class Transform2D
     {
     private:
-    	Vector2D m_trans;  // 2D translation vector 
-    	double m_radians;  // rotation angle about the z axis in radians
+    	/// 2D translation vector
+    	Vector2D m_trans;
+    	/// rotation angle about the z axis in radians   
+    	double m_radians;  
     public:
         /// \brief Create an identity transformation
         Transform2D();
@@ -136,7 +140,7 @@ namespace rigid2d
         Transform2D inv() const;
         
         /// \brief Convert twist to a different reference frame using the adjoint of the object's transformation
-        /// \param twist - the twist to convert
+        /// \param tw - the twist to convert
         /// \return a twist in the new reference frame
         Twist2D change_twist_frame(const Twist2D & tw) const; 
         
@@ -175,9 +179,12 @@ namespace rigid2d
     class Twist2D
     {
     private:
-    	Vector2D m_trans_v;  // 2D translational velocity vector
-    	double m_rot_v;  // rotational velocity about the z axis (in radians/time)
-    	friend class Transform2D;  // allow Transform2D to access the private members of Twist2D
+    	/// 2D translational velocity vector
+    	Vector2D m_trans_v;
+    	/// rotational velocity about the z axis (in radians/time)  		
+    	double m_rot_v;  	
+    	/// allow Transform2D to access the private members of Twist2D		
+    	friend class Transform2D;  	
 	public:
 		/// \brief Create a 0 velocity twist
         Twist2D();
