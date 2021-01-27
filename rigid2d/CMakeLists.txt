@@ -24,7 +24,7 @@ target_compile_options(rigid2d PUBLIC -Wall -Wextra -pipe)
 
 find_package(Doxygen)
 set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md) # Use the readme in your doxygen docs
-doxygen_add_docs(doxygen src/ README.md ALL)
+doxygen_add_docs(doxygen include/rigid2d/ README.md ALL)
 
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
     message(FATAL_ERROR
