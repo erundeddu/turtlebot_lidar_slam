@@ -38,6 +38,18 @@ namespace rigid2d
 		return is;
 	}
 	
+	Vector2D::Vector2D()
+		: x(0.0)
+		, y(0.0)
+	{
+	}
+	
+	Vector2D::Vector2D(double x_arg, double y_arg)
+		: x(x_arg)
+		, y(y_arg)
+	{
+	}
+	
 	Vector2D & Vector2D::normalize()
 	{
 		double mag = sqrt(x*x + y*y);
@@ -47,6 +59,45 @@ namespace rigid2d
 			y *= (1/mag);
 		}	
 		return *this;
+	}
+	
+	Vector2D & Vector2D::operator+=(const Vector2D & rhs)
+	{
+		x += rhs.x;
+		y += rhs.y;
+		return *this;
+	}
+	
+	Vector2D & Vector2D::operator-=(const Vector2D & rhs)
+	{
+		x -= rhs.x;
+		y -= rhs.y;
+		return *this;
+	}
+	
+	Vector2D operator+(Vector2D lhs, const Vector2D & rhs)
+	{
+		lhs += rhs;
+		return lhs;
+	}
+	
+	Vector2D operator-(Vector2D lhs, const Vector2D & rhs)
+	{
+		lhs -= rhs;
+		return lhs;
+	}
+
+	
+	double magnitude(const Vector2D & v)
+	{
+		double mag = sqrt(v.x*v.x + v.y*v.y);
+		return mag;
+	}
+	
+	double angle(const Vector2D & v)
+	{
+		double ang = atan2(v.y, v.x);
+		return ang;
 	}
 	
 	Transform2D::Transform2D()
@@ -91,6 +142,11 @@ namespace rigid2d
     double Transform2D::getCtheta() const
     {
 		return cos(m_radians);
+	}
+	
+	double Transform2D::getTheta() const
+	{
+		return m_radians;
 	}
 	
 	Vector2D Transform2D::operator()(Vector2D v) const
@@ -227,7 +283,45 @@ namespace rigid2d
 		tw = twnew;
 		return is;
 	}
-
-		
+	
+	double normalize_angle(double rad)
+	{
+		if (rad >= 0)
+		{
+			while (rad >= PI)
+			{
+				rad -= 2*PI;
+			}
+			return rad;
+		}
+		else
+		{
+			while (rad <= -PI)
+			{
+				rad += 2*PI;
+			}
+			return rad;
+		}	
+	}
+	
+	Transform2D integrateTwist(Twist2D & tw)
+	{	
+		Vector2D v;
+		double theta;
+		if (almost_equal(tw.getW(), 0.0))  // pure translation case
+		{
+			theta = 0;
+			v.x = tw.getVx();
+			v.y = tw.getVy();
+		}
+		else
+		{
+			theta = tw.getW();
+			v.x = (tw.getVx()*sin(theta) + tw.getVy()*(cos(theta)-1))/theta;
+			v.y = (tw.getVx()*(1-cos(theta)) + tw.getVy()*sin(theta))/theta;
+		}
+		Transform2D tf(v, theta);
+		return tf;	
+	}	
 }	
 

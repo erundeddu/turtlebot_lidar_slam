@@ -7,8 +7,7 @@ Arun Kumar
 Edoardo Rundeddu
 */ 
 
-#define CATCH_CONFIG_MAIN
-#include "catch.hpp"
+#include <catch_ros/catch.hpp>
 #include "rigid2d/rigid2d.hpp"
 #include <cmath>
 #include <iostream>
@@ -220,4 +219,104 @@ TEST_CASE("Access methods for Transform2D", "[access]"){ //Edoardo, Rundeddu
 	REQUIRE(almost_equal(transMat.getCtheta(), -1));
 	REQUIRE(almost_equal(transMat.getStheta(), 0));
 }
+
+TEST_CASE("Vector2D addition", "[operator]") //Edoardo, Rundeddu
+{
+	using namespace rigid2d;
+	
+	Vector2D v1(1.0, 3.0);
+	Vector2D v2(-2.0, 4.5);
+	Vector2D v3 = v1 + v2;
+	REQUIRE(almost_equal(v3.x, -1.0));
+	REQUIRE(almost_equal(v3.y, 7.5));
+}
+
+TEST_CASE("Vector2D subtraction", "[operator]") //Edoardo, Rundeddu
+{ 
+	using namespace rigid2d;
+	
+	Vector2D v1(1.0, 3.0);
+	Vector2D v2(-2.0, 4.5);
+	Vector2D v3 = v1 - v2;
+	REQUIRE(almost_equal(v3.x, 3.0));
+	REQUIRE(almost_equal(v3.y, -1.5));
+}
+
+TEST_CASE("Vector2D constructor", "[constructor]") //Edoardo, Rundeddu
+{
+	using namespace rigid2d;
+	
+	Vector2D v(3.1, -1.2);
+	REQUIRE(almost_equal(v.x, 3.1));
+	REQUIRE(almost_equal(v.y, -1.2));
+}
+
+TEST_CASE("Vector2D default constructor", "[constructor]") //Edoardo, Rundeddu
+{
+	using namespace rigid2d;
+	
+	Vector2D v;
+	REQUIRE(almost_equal(v.x, 0));
+	REQUIRE(almost_equal(v.y, 0));
+}
+
+TEST_CASE("Vector2D magnitude", "[vector_properties]") //Edoardo, Rundeddu
+{
+	using namespace rigid2d;
+	
+	Vector2D v(3.0, 4.0);
+	REQUIRE(almost_equal(magnitude(v), 5.0));
+}
+
+TEST_CASE("Vector2D angle", "[vector_properties]") //Edoardo, Rundeddu
+{
+	using namespace rigid2d;
+	
+	Vector2D v1(4.0, 4.0);
+	Vector2D v2(-2.0, 0.0);
+	Vector2D v3(0.0, -5.0);
+	REQUIRE(almost_equal(angle(v1), PI/4));
+	REQUIRE(almost_equal(angle(v2), PI));
+	REQUIRE(almost_equal(angle(v3), -PI/2));
+}
+
+TEST_CASE("Normalize angle", "[angle_operations]") //Edoardo, Rundeddu
+{
+	using namespace rigid2d;
+	
+	double th1 = 2*PI + PI/6;
+	double th2 = -PI/2;
+	double th3 = -3*PI/2;
+	double th4 = -2*PI - PI/6;
+	REQUIRE(almost_equal(normalize_angle(th1), PI/6));
+	REQUIRE(almost_equal(normalize_angle(th2), -PI/2));
+	REQUIRE(almost_equal(normalize_angle(th3), PI/2));
+	REQUIRE(almost_equal(normalize_angle(th4), -PI/6));
+}
+
+TEST_CASE("Twist integration", "[transform]") //Edoardo, Rundeddu
+{
+	using namespace rigid2d;
+	
+	Vector2D v(3.0, 2.0);
+	Twist2D tw_trans(v);
+	Transform2D tf_trans = integrateTwist(tw_trans);
+	REQUIRE(almost_equal(tf_trans.getX(), 3.0));
+	REQUIRE(almost_equal(tf_trans.getY(), 2.0));
+	REQUIRE(almost_equal(tf_trans.getTheta(), 0.0));
+		
+	double w = 0.5;
+	Twist2D tw_rot(w);
+	Transform2D tf_rot = integrateTwist(tw_rot);
+	REQUIRE(almost_equal(tf_rot.getX(), 0.0));
+	REQUIRE(almost_equal(tf_rot.getY(), 0.0));
+	REQUIRE(almost_equal(tf_rot.getTheta(), 0.5));
+	
+	w = PI/2;
+	Twist2D tw_full(v, w);
+	Transform2D tf_full = integrateTwist(tw_full);
+	REQUIRE(almost_equal(tf_full.getX(), 2.0/PI));
+	REQUIRE(almost_equal(tf_full.getY(), 10.0/PI));
+	REQUIRE(almost_equal(tf_full.getTheta(), PI/2));
+}	
 	 

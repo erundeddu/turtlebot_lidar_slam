@@ -26,7 +26,7 @@ namespace rigid2d
 
     /// \brief convert degrees to radians
     /// \param deg - angle in degrees
-    /// \returns radians
+    /// \return radians
     /// NOTE: implement this in the header file
     /// constexpr means that the function can be computed at compile time
     /// if given a compile-time constant as input
@@ -37,7 +37,7 @@ namespace rigid2d
 
     /// \brief convert radians to degrees
     /// \param rad - angle in radians
-    /// \returns the angle in degrees
+    /// \return the angle in degrees
     constexpr double rad2deg(double rad)
     {
     	return rad*180/PI;
@@ -65,9 +65,34 @@ namespace rigid2d
         /// y component of vector  
         double y = 0.0;  
         
+        /// \brief Create a 0 vector
+        Vector2D();
+        
+        /// \brief Create a vector with prescribed x and y components
+        /// \param x_arg - x component of vector
+        /// \param y_arg - y component of vector
+        Vector2D(double x_arg, double y_arg);
+        
         /// \brief make the Vector2D instance a unit vector if not zero and return it
         /// \return the normalized Vector2D instance 
         Vector2D & normalize();
+        
+        /// \brief add this vector to another and store the result 
+        /// in this object
+        /// \param rhs - the vector to add
+        /// \return a reference to the newly added vector
+        Vector2D & operator+=(const Vector2D & rhs);
+        
+        /// \brief subtract another vector from this and store the result 
+        /// in this object
+        /// \param rhs - the vector to add
+        /// \return a reference to the newly added vector
+        Vector2D & operator-=(const Vector2D & rhs);
+        
+        /// \brief perform scalar multiplication of this vector with another vector
+        /// \param rhs - the vector to multiply
+        /// \return a reference to the scalar product
+        double & operator*=(const Vector2D & rhs);  //TODO *= when type change Vector2D -> double
     };
 
     /// \brief output a 2 dimensional vector as [xcomponent ycomponent]
@@ -84,6 +109,34 @@ namespace rigid2d
     /// https://en.cppreference.com/w/cpp/io/basic_istream/peek
     /// https://en.cppreference.com/w/cpp/io/basic_istream/get
     std::istream & operator>>(std::istream & is, Vector2D & v);
+    
+    /// \brief perform vector addition on Vector2D elements 
+    /// \param lhs - the first vector to add
+    /// \param rhs - the second vector to add
+    /// \return the result of the vector addition
+    Vector2D operator+(Vector2D lhs, const Vector2D & rhs);
+    
+    /// \brief perform vector subtraction on Vector2D elements 
+    /// \param lhs - the first vector
+    /// \param rhs - the vector to subtract
+    /// \return the result of the vector subtraction
+    Vector2D operator-(Vector2D lhs, const Vector2D & rhs);  
+    
+    /// \brief perform scalar multiplication of two vectors
+    /// \param lhs - the first vector to multiply
+    /// \param rhs - the second vector to multiply
+    /// \return the scalar product
+    double operator*(Vector2D lhs, const Vector2D & rhs);  //TODO * when type change Vector2D -> double 
+    
+    /// \brief return the magnitude of a vector
+    /// \param v - a Vector2D object
+    /// \return the magnitude of the vector
+    double magnitude(const Vector2D & v); 
+    
+    /// \brief return the angle of a vector
+    /// \param v - a Vector2D object
+    /// \return the angle of the vector
+    double angle(const Vector2D & v); 
     
     /// Forward declaration of Twist2D
     class Twist2D;
@@ -115,20 +168,24 @@ namespace rigid2d
         Transform2D(const Vector2D & trans, double radians);
         
         /// \brief get the translation component in the x direction
-        /// \returns the translation component in the x direction
+        /// \return the translation component in the x direction
         double getX() const;
         
         /// \brief get the translation component in the y direction
-        /// \returns the translation component in the y direction
+        /// \return the translation component in the y direction
         double getY() const;
         
         /// \brief get the sin of the rotation angle
-        /// \returns the sin of the rotation angle
+        /// \return the sin of the rotation angle
         double getStheta() const;
         
         /// \brief get the cos of the rotation angle
-        /// \returns the cos of the rotation angle
+        /// \return the cos of the rotation angle
         double getCtheta() const;
+        
+        /// \brief get the the rotation angle
+        /// \return the rotation angle
+        double getTheta() const;
 
         /// \brief apply a transformation to a Vector2D
         /// \param v - the vector to transform
@@ -147,7 +204,7 @@ namespace rigid2d
         /// \brief compose this transform with another and store the result 
         /// in this object
         /// \param rhs - the first transform to apply
-        /// \returns a reference to the newly transformed operator
+        /// \return a reference to the newly transformed operator
         Transform2D & operator*=(const Transform2D & rhs);
 
         /// \brief \see operator<<(...) (declared outside this class)
@@ -198,15 +255,15 @@ namespace rigid2d
         explicit Twist2D(double rot_v);
         
         /// \brief get the x linear component of the 2D twist
-        /// \returns the x linear component of the 2D twist
+        /// \return the x linear component of the 2D twist
         double getVx() const;
         
         /// \brief get the y linear component of the 2D twist
-        /// \returns the y linear component of the 2D twist
+        /// \return the y linear component of the 2D twist
 		double getVy() const;
 		
 		/// \brief get the rotational component of the 2D twist
-        /// \returns the rotational component of the 2D twist
+        /// \return the rotational component of the 2D twist
 		double getW() const;
 
         /// \brief Create a twist with a translational and rotational
@@ -231,6 +288,17 @@ namespace rigid2d
     /// Should be able to read input either as output by operator<< or
     /// as 3 numbers (w, x_dot, y_dot) separated by spaces or newlines
     std::istream & operator>>(std::istream & is, Twist2D & tw);
+    
+    /// \brief converts an angle to the range [-pi, pi]
+    /// \param rad - the angle to convert in radians
+    /// \return an angle in radians between [-pi, pi]
+    double normalize_angle(double rad);
+    
+    /// \brief computes the transformation corresponding to a rigid body following
+    /// a twist for unit time
+    /// \param tw - the twist followed by the transformation
+    /// \return a transformation due to the twist
+    Transform2D integrateTwist(Twist2D & tw);
 }
 
 #endif
