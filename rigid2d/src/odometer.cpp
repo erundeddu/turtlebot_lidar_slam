@@ -3,30 +3,52 @@
 #include <nav_msgs/Odometry.h>
 #include <string>
 #include "rigid2d/rigid2d.hpp"
+#include "rigid2d/diff_drive.hpp"
 
 /// TODO node comment
 
+static ros::Time current_time, last_time;
+static DiffDrive dd;  // TODO how to access this from callback without initially constructing
+static double wheel_base;
+static double wheel_radius;
+static std::string odom_frame_id;
+static std::string body_frame_id;
+static std::string left_wheel_joint;
+static std::string right_wheel_joint;
+static ros::Publisher pub;
+	
+
 void callback(const sensor_msgs::JointState::ConstPtr & msg)
 {
-	x = msg->x;
-	y = msg->y;
-	theta = msg->theta;
+	// start referencing http://wiki.ros.org/navigation/Tutorials/RobotSetup/Odom here (Access: 2/1/2021)	
+	current_time = ros::Time::now();
+	
+	// TODO update position in dd
+
+	nav_msgs::Odometry odom;
+	odom.header.stamp = current_time
+	odom.header.frame_id = odom_frame_id;
+	odom.child_frame_id = body_frame_id;
+	odom.pose.pose.position.x = dd.getX();
+	odom.pose.pose.position.y = dd.getY();
+	odom.pose.pose.position.z = 0.0;
+	geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(dd.getTheta());
+	odom.pose.pose.orientation = odom_quat;
+	
+	odom_pub.publish(odom);
+	last_time = current_time;
+	// end referencing http://wiki.ros.org/navigation/Tutorials/RobotSetup/Odom here (Access: 2/1/2021)
+	
+	// TODO broadcast transform between odom_frame_id and body_frame_id on /tf using a tf2 broadcaster
 }
 
 int main(int argc, char** argv)
 {
 	ros::init(argc, argv, "odometer");
 	ros::NodeHandle n;
-	ros::Publisher pub = n.advertise<nav_msgs::Odometry>("odom", 50);
+	pub = n.advertise<nav_msgs::Odometry>("odom", 50);
 	ros::Subscriber sub = n.subscribe("sensor_msgs/JointState", 50, callback);
 	tf::TransformBroadcaster odom_broadcaster;
-	
-	double wheel_base;
-	double wheel_radius;
-	std::string odom_frame_id;
-	std::string body_frame_id;
-	std::string left_wheel_joint;
-	std::string right_wheel_joint;
 	
 	nh.getParam("wheel_base", wheel_base);
 	nh.getParam("wheel_radius", wheel_radius);
@@ -35,5 +57,17 @@ int main(int argc, char** argv)
 	nh.getParam("~left_wheel_joint", left_wheel_joint);
 	nh.getParam("~right_wheel_joint", right_wheel_joint);
 	
+	RobotPose q0;  // initial robot pose
+	DiffDrive dd(q0, wheel_base, wheel_radius);
+	ros::Rate r(1.0);  //TODO put some frequency here
+	
+	current_time = ros::Time::now();
+	last_time = ros::Time::now();
+	
+	while(n.ok())
+	{
+		ros::spinOnce(); 
+		r.sleep();
+	}
 	return 0;
 }

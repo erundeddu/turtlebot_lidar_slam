@@ -56,4 +56,19 @@ namespace rigid2d
 		wv.l_vel = (2*tw.getVx() - tw.getTheta()*m_wheel_base)/(2.0*m_wheel_radius);
 		return wv;
 	}
+	
+	double DiffDrive::getTheta() const
+	{
+		return m_q.theta;
+	}
+		
+	double DiffDrive::getX() const
+	{
+		return m_q.x;
+	}
+	
+	double DiffDrive::getY() const
+	{
+		return m_q.y;
+	}
 }

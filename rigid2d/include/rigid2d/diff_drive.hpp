@@ -45,6 +45,18 @@ namespace rigid2d
 		/// \param tw - twist to be converted
 		/// \return left and right wheel velocities
 		WheelVel Twist2WheelVel(Twist2D & tw) const;
+		
+		/// \brief get the heading angle of the robot
+		/// \return heading angle of the robot
+		double getTheta() const;
+		
+		/// \brief get the x coordinate of the robot
+		/// \return x coordinate of the robot
+		double getX() const;
+		
+		/// \brief get the y coordinate of the robot
+		/// \return y coordinate of the robot
+		double getY() const;
 	};
 	
 	/// \brief 2D pose of a diff drive robot
