@@ -49,4 +49,11 @@ namespace rigid2d
 		m_y += d_q.getY();
 	}
 	
+	WheelVel DiffDrive::Twist2WheelVel(Twist2D & tw) const
+	{
+		WheelVel wv;
+		wv.r_vel = (2*tw.getVx() + tw.getTheta()*m_wheel_base)/(2.0*m_wheel_radius);
+		wv.l_vel = (2*tw.getVx() - tw.getTheta()*m_wheel_base)/(2.0*m_wheel_radius);
+		return wv;
+	}
 }
