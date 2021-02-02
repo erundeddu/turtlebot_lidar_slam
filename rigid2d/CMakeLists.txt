@@ -8,14 +8,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS catch_ros)
+find_package(catkin REQUIRED COMPONENTS catch_ros nav_msgs tf)
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
 
 find_package(Doxygen)
 set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md) # Use the readme in your doxygen docs
-doxygen_add_docs(rigid2d_doxygen include/rigid2d/ README.md ALL)
+doxygen_add_docs(${PROJECT_NAME}_doxygen include/${PROJECT_NAME}/ README.md ALL)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -105,7 +105,7 @@ doxygen_add_docs(rigid2d_doxygen include/rigid2d/ README.md ALL)
 catkin_package(
    INCLUDE_DIRS include
    LIBRARIES ${PROJECT_NAME}
-   CATKIN_DEPENDS catch_ros
+   CATKIN_DEPENDS catch_ros nav_msgs tf
 #  DEPENDS system_lib
 )
 

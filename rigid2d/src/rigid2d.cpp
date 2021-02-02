@@ -75,6 +75,13 @@ namespace rigid2d
 		return *this;
 	}
 	
+	Vector2D & Vector2D::operator*=(const double s)
+	{
+		x *= s;
+		y *= s;
+		return *this;
+	}
+	
 	Vector2D operator+(Vector2D lhs, const Vector2D & rhs)
 	{
 		lhs += rhs;
@@ -86,7 +93,18 @@ namespace rigid2d
 		lhs -= rhs;
 		return lhs;
 	}
-
+	
+	Vector2D operator*(Vector2D v, const double s)
+	{
+		v *= s;
+		return v;
+	}
+	
+	Vector2D operator*(const double s, Vector2D v)
+	{
+		v *= s;
+		return v;
+	}
 	
 	double magnitude(const Vector2D & v)
 	{

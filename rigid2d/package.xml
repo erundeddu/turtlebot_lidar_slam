@@ -8,4 +8,6 @@
   <author email="edoardorundeddu2021@u.northwestern.edu">Edoardo Rundeddu</author>
   <buildtool_depend>catkin</buildtool_depend>
   <depend>catch_ros</depend>
+  <depend>tf</depend>
+  <depend>nav_msgs</depend>
 </package>

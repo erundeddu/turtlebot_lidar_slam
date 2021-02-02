@@ -242,6 +242,17 @@ TEST_CASE("Vector2D subtraction", "[operator]") //Edoardo, Rundeddu
 	REQUIRE(almost_equal(v3.y, -1.5));
 }
 
+TEST_CASE("Vector2D multiplication by a scalar", "[operator]") //Edoardo, Rundeddu
+{
+	using namespace rigid2d;
+	
+	Vector2D v(2.0, -1.0);
+	double s = 3.0;
+	v *= s;
+	REQUIRE(almost_equal(v.x, 6.0));
+	REQUIRE(almost_equal(v.y, -3.0));
+}
+
 TEST_CASE("Vector2D constructor", "[constructor]") //Edoardo, Rundeddu
 {
 	using namespace rigid2d;

@@ -89,10 +89,10 @@ namespace rigid2d
         /// \return a reference to the newly added vector
         Vector2D & operator-=(const Vector2D & rhs);
         
-        /// \brief perform scalar multiplication of this vector with another vector
-        /// \param rhs - the vector to multiply
-        /// \return a reference to the scalar product
-        double & operator*=(const Vector2D & rhs);  //TODO *= when type change Vector2D -> double
+        /// \brief multiply this vector by a scalar
+        /// \param s - the scalar to multiply by
+        /// \return a reference to the scaled vector
+        Vector2D & operator*=(const double s);
     };
 
     /// \brief output a 2 dimensional vector as [xcomponent ycomponent]
@@ -122,11 +122,17 @@ namespace rigid2d
     /// \return the result of the vector subtraction
     Vector2D operator-(Vector2D lhs, const Vector2D & rhs);  
     
-    /// \brief perform scalar multiplication of two vectors
-    /// \param lhs - the first vector to multiply
-    /// \param rhs - the second vector to multiply
-    /// \return the scalar product
-    double operator*(Vector2D lhs, const Vector2D & rhs);  //TODO * when type change Vector2D -> double 
+    /// \brief multiply a vector by a scalar
+    /// \param v - the vector to multiply
+    /// \param s - the scalar
+    /// \return the scaled vector
+    Vector2D operator*(Vector2D v, const double s);
+    
+    /// \brief multiply a vector by a scalar
+    /// \param v - the vector to multiply
+    /// \param s - the scalar
+    /// \return the scaled vector
+    Vector2D operator*(const double s, Vector2D v);
     
     /// \brief return the magnitude of a vector
     /// \param v - a Vector2D object

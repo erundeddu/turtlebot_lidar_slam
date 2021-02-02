@@ -39,12 +39,12 @@ namespace rigid2d
 		/// \brief update diff drive pose 
 		/// \param r_wheel_phi_new - new angular displacement of right wheel of the robot
 		/// \param l_wheel_phi_new - new angular displacement of left wheel of the robot
-		void UpdatePose(double r_wheel_phi_new, double l_wheel_phi_new);
+		void updatePose(double r_wheel_phi_new, double l_wheel_phi_new);
 		
 		/// \brief converts a twist to wheel velocities
 		/// \param tw - twist to be converted
 		/// \return left and right wheel velocities
-		WheelVel Twist2WheelVel(Twist2D & tw) const;
+		WheelVel twist2WheelVel(Twist2D & tw) const;
 		
 		/// \brief get the heading angle of the robot
 		/// \return heading angle of the robot
@@ -57,6 +57,14 @@ namespace rigid2d
 		/// \brief get the y coordinate of the robot
 		/// \return y coordinate of the robot
 		double getY() const;
+		
+		/// \brief get the right wheel angular displacement
+		/// \return right wheel angular displacement
+		double getRWheelPhi() const;
+		
+		/// \brief get the left wheel angular displacement
+		/// \return left wheel angular displacement
+		double getLWheelPhi() const;
 	};
 	
 	/// \brief 2D pose of a diff drive robot

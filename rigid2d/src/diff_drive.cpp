@@ -26,7 +26,7 @@ namespace rigid2d
 	{
 	}
 	
-	void DiffDrive::UpdatePose(r_wheel_phi_new, l_wheel_phi_new)
+	void DiffDrive::updatePose(r_wheel_phi_new, l_wheel_phi_new)
 	{
 		// Determine wheel angle change
 		double d_phi_r = r_wheel_phi_new - m_r_wheel_phi;
@@ -49,7 +49,7 @@ namespace rigid2d
 		m_y += d_q.getY();
 	}
 	
-	WheelVel DiffDrive::Twist2WheelVel(Twist2D & tw) const
+	WheelVel DiffDrive::twist2WheelVel(Twist2D & tw) const
 	{
 		WheelVel wv;
 		wv.r_vel = (2*tw.getVx() + tw.getTheta()*m_wheel_base)/(2.0*m_wheel_radius);
@@ -70,5 +70,15 @@ namespace rigid2d
 	double DiffDrive::getY() const
 	{
 		return m_q.y;
+	}
+	
+	double DiffDrive::getRWheelPhi() const
+	{
+		return m_r_wheel_phi;
+	}
+	
+	double DiffDrive::getLWheelPhi() const
+	{
+		return m_l_wheel_phi;
 	}
 }
