@@ -6,7 +6,27 @@
 #include "rigid2d/rigid2d.hpp"
 
 namespace rigid2d
-{
+{	
+	/// \brief 2D pose of a diff drive robot
+	struct RobotPose
+	{
+		/// heading angle of robot
+		double theta = 0.0;
+		/// x coordinate of robot
+		double x = 0.0;
+		/// y coordinate of robot
+		double y = 0.0;
+	};
+	
+	/// \brief set of wheel velocities for a diff drive robot
+	struct WheelVel
+	{
+		/// right wheel velocity
+		double r_vel = 0.0;
+		/// left wheel velocity
+		double l_vel = 0.0;
+	};
+	
 	/// \brief a way to track the pose of a diff drive robot through odometry
 	class DiffDrive
 	{
@@ -35,6 +55,14 @@ namespace rigid2d
 		/// \param wheel_base - distance between wheels of the robot
 		/// \param wheel_radius - radius of the robot wheels
 		DiffDrive(double wheel_base, double wheel_radius);
+		
+		/// \brief Track a diff drive robot, uninitialized physical parameters
+		DiffDrive();
+		
+		/// \brief sets value of wheel_base and wheel_radius private members
+		/// \param wheel_base - distance between wheels of the robot
+		/// \param wheel_radius - radius of the robot wheels
+		void setPhysicalParams(double wheel_base, double wheel_radius);
 		
 		/// \brief update diff drive pose 
 		/// \param r_wheel_phi_new - new angular displacement of right wheel of the robot
@@ -65,26 +93,6 @@ namespace rigid2d
 		/// \brief get the left wheel angular displacement
 		/// \return left wheel angular displacement
 		double getLWheelPhi() const;
-	};
-	
-	/// \brief 2D pose of a diff drive robot
-	struct RobotPose
-	{
-		/// heading angle of robot
-		double theta = 0.0;
-		/// x coordinate of robot
-		double x = 0.0;
-		/// y coordinate of robot
-		double y = 0.0;
-	};
-	
-	/// \brief set of wheel velocities for a diff drive robot
-	struct WheelVel
-	{
-		/// right wheel velocity
-		double r_vel = 0.0;
-		/// left wheel velocity
-		double l_vel = 0.0;
 	};
 }		
 #endif

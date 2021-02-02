@@ -1,3 +1,5 @@
+#include "rigid2d/diff_drive.hpp"
+
 namespace rigid2d
 {
 	DiffDrive::DiffDrive(RobotPose q, double wheel_base, double wheel_radius, double r_wheel_phi, double l_wheel_phi)
@@ -19,14 +21,26 @@ namespace rigid2d
 	}
 	
 	DiffDrive::DiffDrive(double wheel_base, double wheel_radius)
-		, m_wheel_base(wheel_base)
+		: m_wheel_base(wheel_base)
 		, m_wheel_radius(wheel_radius)
 		, m_r_wheel_phi(0.0)
 		, m_l_wheel_phi(0.0)
 	{
 	}
 	
-	void DiffDrive::updatePose(r_wheel_phi_new, l_wheel_phi_new)
+	DiffDrive::DiffDrive()
+		: m_r_wheel_phi(0.0)
+		, m_l_wheel_phi(0.0)
+	{
+	}
+	
+	void DiffDrive::setPhysicalParams(double wheel_base, double wheel_radius)
+	{
+		m_wheel_base = wheel_base;
+		m_wheel_radius = wheel_radius;
+	}
+	
+	void DiffDrive::updatePose(double r_wheel_phi_new, double l_wheel_phi_new)
 	{
 		// Determine wheel angle change
 		double d_phi_r = r_wheel_phi_new - m_r_wheel_phi;
@@ -35,25 +49,25 @@ namespace rigid2d
 		m_r_wheel_phi += d_phi_r;
 		m_l_wheel_phi += d_phi_l;
 		// Compute body twist
-		double d_theta_b = (d_phi_r - d_phi_l) * wheel_radius / wheel_base;
-		double d_x_b = (d_phi_r + d_phi_l) * wheel_radius / 2;
+		double d_theta_b = (d_phi_r - d_phi_l) * m_wheel_radius / m_wheel_base;
+		double d_x_b = (d_phi_r + d_phi_l) * m_wheel_radius / 2;
 		double d_y_b = 0.0;
 		Vector2D d_v(d_x_b, d_y_b);
 		Twist2D d_q_b(d_v, d_theta_b);  
 		Vector2D v;  // zero vector
-		Transform2D t_a(v, m_theta);  // frame aligned with the world but located at the body
+		Transform2D t_a(v, m_q.theta);  // frame aligned with the world but located at the body
 		Twist2D d_q = t_a.change_twist_frame(d_q_b);
 		// Update pose
-		m_theta += d_q.getW();
-		m_x += d_q.getX();
-		m_y += d_q.getY();
+		m_q.theta += d_q.getW();
+		m_q.x += d_q.getVx();
+		m_q.y += d_q.getVy();
 	}
 	
 	WheelVel DiffDrive::twist2WheelVel(Twist2D & tw) const
 	{
 		WheelVel wv;
-		wv.r_vel = (2*tw.getVx() + tw.getTheta()*m_wheel_base)/(2.0*m_wheel_radius);
-		wv.l_vel = (2*tw.getVx() - tw.getTheta()*m_wheel_base)/(2.0*m_wheel_radius);
+		wv.r_vel = (2*tw.getVx() + tw.getW()*m_wheel_base)/(2.0*m_wheel_radius);
+		wv.l_vel = (2*tw.getVx() - tw.getW()*m_wheel_base)/(2.0*m_wheel_radius);
 		return wv;
 	}
 	
