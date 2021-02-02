@@ -18,7 +18,7 @@ void callback(const geometry_msgs::Twist::ConstPtr & msg)
 	Vector2D v(msg -> linear.x, msg -> linear.y);
 	Twist2D tw(v, msg -> angular.z);
 	wv.r_vel = (dd.twist2WheelVel(tw)).r_vel;
-	wv.l_vel = (dd.twist2WheelVel(tw)).l_vel;	
+	wv.l_vel = (dd.twist2WheelVel(tw)).l_vel;
 }
 
 int main(int argc, char** argv)
@@ -28,7 +28,7 @@ int main(int argc, char** argv)
 	ros::init(argc, argv, "fake_turtle");
 	ros::NodeHandle n;
 	ros::Publisher pub = n.advertise<sensor_msgs::JointState>("joint_states", 50);
-	ros::Subscriber sub = n.subscribe("turtle1/cmd_vel", 50, callback);
+	ros::Subscriber sub = n.subscribe("cmd_vel", 50, callback);
 	
 	double wheel_base;
 	double wheel_radius;
@@ -47,12 +47,19 @@ int main(int argc, char** argv)
 	sensor_msgs::JointState js;
 	js.name = {right_wheel_joint, left_wheel_joint};
 	
+	auto current_time = ros::Time::now();
+	auto last_time = ros::Time::now();
+	
 	while(n.ok())
-	{
-		ros::spinOnce(); 
+	{	
+		ros::spinOnce();  //TODO if here or in odometry
+		current_time = ros::Time::now(); 
+		double dt = (current_time - last_time).toSec();
+		dd.updatePose(dd.getRWheelPhi()+dt*wv.r_vel, dd.getLWheelPhi()+dt*wv.l_vel);
 		js.position = {dd.getRWheelPhi(), dd.getLWheelPhi()};
-		js.velocity = {wv.r_vel, wv.l_vel};
+		//js.velocity = {wv.r_vel, wv.l_vel};
 		pub.publish(js);
+		last_time = current_time;
 		r.sleep();
 	}
 	return 0;
