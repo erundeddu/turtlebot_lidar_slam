@@ -41,7 +41,7 @@ int main(int argc, char** argv)
 	n.getParam("right_wheel_joint", right_wheel_joint);
 	
 	// TODO have some initial pose q0?
-	dd.setPhysicalParams(wheel_base, wheel_radius);
+	dd.setPhysicalParams(wheel_base, wheel_radius);  //FIXME try this with a constructor here
 	ros::Rate r(100);
 	
 	sensor_msgs::JointState js;
@@ -55,9 +55,9 @@ int main(int argc, char** argv)
 		ros::spinOnce();  //TODO if here or in odometry
 		current_time = ros::Time::now(); 
 		double dt = (current_time - last_time).toSec();
-		dd.updatePose(dd.getRWheelPhi()+dt*wv.r_vel, dd.getLWheelPhi()+dt*wv.l_vel);
+		dd.updatePose(dd.getRWheelPhi()+dt*wv.r_vel, dd.getLWheelPhi()+dt*wv.l_vel);  // only care about wheel angles
 		js.position = {dd.getRWheelPhi(), dd.getLWheelPhi()};
-		//js.velocity = {wv.r_vel, wv.l_vel};
+		js.velocity = {wv.r_vel, wv.l_vel};
 		pub.publish(js);
 		last_time = current_time;
 		r.sleep();

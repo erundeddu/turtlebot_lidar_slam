@@ -9,7 +9,7 @@ add_compile_options(-Wall -Wextra -pipe)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS catch_ros nav_msgs tf)
+find_package(catkin REQUIRED COMPONENTS catch_ros nav_msgs tf2 tf2_ros)
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
@@ -106,7 +106,7 @@ doxygen_add_docs(${PROJECT_NAME}_doxygen include/${PROJECT_NAME}/ README.md ALL)
 catkin_package(
    INCLUDE_DIRS include
    LIBRARIES ${PROJECT_NAME}
-   CATKIN_DEPENDS catch_ros nav_msgs tf
+   CATKIN_DEPENDS catch_ros nav_msgs tf2 tf2_ros
 #  DEPENDS system_lib
 )
 

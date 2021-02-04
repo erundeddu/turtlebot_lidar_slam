@@ -5,6 +5,4 @@
 This repository consists of several ROS packages
 - nuturtle\_description - contains urdf files and basic debugging, testing, and visualization code for the robots used in ME495
 - trect - makes a turtlesim turtle move along a rectangular path
-
-Other packages
-- rigid2d - contains functions for performing 2D rigid body transformations
+- rigid2d - contains functions for performing 2D rigid body transformations, diff-drive robot definition, and ROS nodes for odometry and diff-drive robot kinematic simulation

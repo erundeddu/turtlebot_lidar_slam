@@ -1,6 +1,8 @@
 # Rigid 2D transformation Library
 A library for handling transformations in SE(2).
 
+
+
 # Conceptual Questions
 1. What is the difference between a class and a struct in C++? Member visibility: a class has by default private members, which cannot be accessed by functions outside of the class; the members of a struct can always be accessed (the equivalent of class public members)
 2. Why is Vector2D a struct and Transform2D a Class (refer to at least 2 specic C++ core guidelines in your answer)? (1) the x and y members of Vector2D can vary independently depending on how the vector is defined (use struct if the data members can vary independently), while the rotation angle and translation vector can be operated on at the same time if the transformation is multiplied. (2) using classes is a better convention to declare non-public members and encapsulate information (which Transform2D has, while Vector2D does not).
