@@ -13,7 +13,6 @@
 	<rosparam command="load" file="$(find nuturtle_description)/config/diff_params.yaml" />  <!--source: http://wiki.ros.org/roslaunch/XML/rosparam-->
 	
 	<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" /> 
-	<node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
 	<node name="rviz" pkg="rviz" type="rviz" args="-d '$(find nuturtle_description)/config/model.rviz'"/>
 	
 	<!--<param name="max_xdot" value="2.0" type="double"/>

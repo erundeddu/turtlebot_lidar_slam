@@ -1,5 +1,8 @@
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <geometry_msgs/TransformStamped.h>
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/JointState.h>
 #include <string>
@@ -9,6 +12,8 @@
 /// TODO review include
 /// TODO node comments
 
+//TODO tf2 vs tf
+
 static rigid2d::DiffDrive dd;
 static nav_msgs::Odometry odom;
 static geometry_msgs::TransformStamped odom_trans;
@@ -16,10 +21,9 @@ static geometry_msgs::TransformStamped odom_trans;
 void callback(const sensor_msgs::JointState::ConstPtr & msg)
 {
 	static ros::NodeHandle nh;
-	static ros::Publisher pub = nh.advertise<nav_msgs::Odometry>("odom", 50);
-	static tf::TransformBroadcaster broadcaster;
+	static tf2_ros::TransformBroadcaster broadcaster;
 	
-	auto current_time = ros::Time::now();
+	ros::Time current_time = ros::Time::now();
 	
 	// update position in robot
 	double r_phi_wheel_new = msg -> position[0];
@@ -33,8 +37,9 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	odom.pose.pose.position.z = 0.0;
 	geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(dd.getTheta());
 	odom.pose.pose.orientation = odom_quat;
+	static ros::Publisher pub = nh.advertise<nav_msgs::Odometry>("odom", 50);
 	pub.publish(odom);
-
+	
 	odom_trans.header.stamp = current_time;
 	odom_trans.transform.translation.x = dd.getX();
 	odom_trans.transform.translation.y = dd.getY();
