@@ -2,7 +2,7 @@
 <package format="2">
   <name>nuturtle_robot</name>
   <version>1.0.0</version>
-  <description>Interact with turtlebot hardware for ME495</description>
+  <description>contains code to interact with the turtlebot hardware and run nodes on the turtlebot from a computer</description>
   <maintainer email="edoardorundeddu2021@u.northwestern.edu">Edoardo Rundeddu</maintainer>
   <license>Apache License 2.0</license>
   <author email="edoardorundeddu2021@u.northwestern.edu">Edoardo Rundeddu</author>
