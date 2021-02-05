@@ -53,7 +53,6 @@ int main(int argc, char** argv)
 	n.getParam("left_wheel_joint", left_wheel_joint);
 	n.getParam("right_wheel_joint", right_wheel_joint);
 	
-	// TODO have some initial pose q0?
 	dd.setPhysicalParams(wheel_base, wheel_radius);  //FIXME try this with a constructor here
 	ros::Rate r(100);
 	

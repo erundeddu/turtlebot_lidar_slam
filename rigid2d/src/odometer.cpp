@@ -21,6 +21,7 @@
 #include <sensor_msgs/JointState.h>
 #include <string>
 #include "rigid2d/diff_drive.hpp"
+#include "rigid2d/set_pose.h"
 
 static rigid2d::DiffDrive dd;
 static nav_msgs::Odometry odom;
@@ -93,6 +94,15 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	// end referencing http://wiki.ros.org/navigation/Tutorials/RobotSetup/Odom here (Access: 2/1/2021)
 }
 
+/// \brief following a set_pose service, reset location of odometry to match requested configuration
+/// \param req - service request package of type rigid2d::set_pose::Request (containing robot pose)
+/// \param res - service response package of type rigid2d::set_pose::Response (empty)
+/// \return true if services were successfully called, else false
+bool set_pose_method(rigid2d::set_pose::Request & req, rigid2d::set_pose::Response &)
+{
+	return true;
+}
+
 int main(int argc, char** argv)
 {
 	using namespace rigid2d;
@@ -120,8 +130,8 @@ int main(int argc, char** argv)
 	odom_trans.header.frame_id = odom_frame_id;
 	odom_trans.child_frame_id = body_frame_id;
 	
-	// TODO have some initial pose q0?
 	dd.setPhysicalParams(wheel_base, wheel_radius);  //FIXME do this with a constructor
+	ros::ServiceServer srv = n.advertiseService("set_pose", set_pose_method);
 	ros::Rate r(100);
 	
 	while(n.ok())
