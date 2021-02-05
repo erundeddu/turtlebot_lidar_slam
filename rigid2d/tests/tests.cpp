@@ -9,6 +9,7 @@ Edoardo Rundeddu
 
 #include <catch_ros/catch.hpp>
 #include "rigid2d/rigid2d.hpp"
+#include "rigid2d/diff_drive.hpp"
 #include <cmath>
 #include <iostream>
 #include <sstream>
@@ -330,4 +331,29 @@ TEST_CASE("Twist integration", "[transform]") //Edoardo, Rundeddu
 	REQUIRE(almost_equal(tf_full.getY(), 10.0/PI));
 	REQUIRE(almost_equal(tf_full.getTheta(), PI/2));
 }	
+
+TEST_CASE("Odometry pose update for pure translation", "[odometry]") //Edoardo Rundeddu
+{
+	using namespace rigid2d;
+	double radius = 1.0;
+	DiffDrive dd(2.0, radius);
+	dd.updatePose(2*PI, 2*PI);
+	REQUIRE(almost_equal(dd.getX(), 2*radius*PI));
+	REQUIRE(almost_equal(dd.getY(), 0.0));
+	REQUIRE(almost_equal(dd.getTheta(), 0.0));
+}
+
+TEST_CASE("Odometry pose update for pure rotation", "[odometry]") //Edoardo Rundeddu
+{
+	using namespace rigid2d;
+	double base = 2.0;
+	double radius = 1.0;
+	DiffDrive dd(base, radius);
+	dd.updatePose(-PI, PI);
+	REQUIRE(almost_equal(dd.getX(), 0.0));
+	REQUIRE(almost_equal(dd.getY(), 0.0));
+	REQUIRE(almost_equal(dd.getTheta(), PI));
+}
+
+
 	 
