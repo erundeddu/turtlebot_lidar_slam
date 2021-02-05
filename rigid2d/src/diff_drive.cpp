@@ -2,21 +2,11 @@
 
 namespace rigid2d
 {
-	DiffDrive::DiffDrive(RobotPose q, double wheel_base, double wheel_radius, double l_wheel_phi, double r_wheel_phi)
-		: m_q(q)
-		, m_wheel_base(wheel_base)
+	DiffDrive::DiffDrive(double wheel_base, double wheel_radius, double l_wheel_phi, double r_wheel_phi)
+		: m_wheel_base(wheel_base)
 		, m_wheel_radius(wheel_radius)
 		, m_l_wheel_phi(l_wheel_phi)
 		, m_r_wheel_phi(r_wheel_phi)
-	{
-	}
-	
-	DiffDrive::DiffDrive(RobotPose q, double wheel_base, double wheel_radius)
-		: m_q(q)
-		, m_wheel_base(wheel_base)
-		, m_wheel_radius(wheel_radius)
-		, m_l_wheel_phi(0.0)
-		, m_r_wheel_phi(0.0)
 	{
 	}
 	
@@ -63,7 +53,7 @@ namespace rigid2d
 		m_q.y += d_q.getVy();
 	}
 	
-	Twist2D DiffDrive::getBodyTwist(double l_wheel_phi_new, double r_wheel_phi_new, double dt)
+	Twist2D DiffDrive::getBodyTwist(double l_wheel_phi_new, double r_wheel_phi_new, double dt) const
 	{
 		// Determine wheel angle change
 		double d_phi_l = l_wheel_phi_new - m_l_wheel_phi;
@@ -77,7 +67,7 @@ namespace rigid2d
 		return d_q_b;
 	}
 	
-	WheelVel DiffDrive::twist2WheelVel(Twist2D & tw) const
+	WheelVel DiffDrive::twist2WheelVel(const Twist2D & tw) const
 	{
 		WheelVel wv;
 		wv.l_vel = (2*tw.getVx() - tw.getW()*m_wheel_base)/(2.0*m_wheel_radius);

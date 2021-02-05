@@ -6,16 +6,12 @@
 	<param name="body_frame_id" value="base_footprint"/>
 
 	<node pkg="turtlebot3_teleop" type="turtlebot3_teleop_key" name="turtlebot3_teleop_keyboard" output="screen"/>
-	<node pkg="rigid2d" type="odometer" name="odometer" output="screen"/>
-	<node pkg="rigid2d" type="fake_turtle" name="fake_turtle" output="screen"/>
+	<node pkg="rigid2d" type="odometer" name="odometer"/>
+	<node pkg="rigid2d" type="fake_turtle" name="fake_turtle"/>
 	
 	<param name="robot_description" command="$(find xacro)/xacro $(find nuturtle_description)/urdf/turtlebot3_burger.urdf.xacro" /> 
-	<rosparam command="load" file="$(find nuturtle_description)/config/diff_params.yaml" />  <!--source: http://wiki.ros.org/roslaunch/XML/rosparam-->
+	<rosparam command="load" file="$(find nuturtle_description)/config/diff_params.yaml" />
 	
 	<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" /> 
 	<node name="rviz" pkg="rviz" type="rviz" args="-d '$(find nuturtle_description)/config/model.rviz'"/>
-	
-	<!--<param name="max_xdot" value="2.0" type="double"/>
-	<param name="max_wdot" value="1.0" type="double"/>
-	<param name="frequency" value="100" type="double"/>	-->
 </launch>
