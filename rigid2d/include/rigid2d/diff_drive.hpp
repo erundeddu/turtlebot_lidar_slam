@@ -58,10 +58,14 @@ namespace rigid2d
 		/// \param wheel_radius - radius of the robot wheels
 		void setPhysicalParams(double wheel_base, double wheel_radius);
 		
-		/// \brief update diff drive pose 
+		/// \brief update diff drive pose based on wheel angles
 		/// \param l_wheel_phi_new - new angular displacement of left wheel of the robot
 		/// \param r_wheel_phi_new - new angular displacement of right wheel of the robot
 		void updatePose(double l_wheel_phi_new, double r_wheel_phi_new);
+		
+		/// \brief update diff drive pose based on commanded values
+		/// \param q - new commanded pose of the robot
+		void setPose(RobotPose q);
 		
 		/// \brief get latest body twist given change in wheel angle
 		/// \param l_wheel_phi_new - new angular displacement of left wheel of the robot

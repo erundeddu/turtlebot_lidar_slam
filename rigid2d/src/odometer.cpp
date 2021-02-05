@@ -100,6 +100,13 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 /// \return true if services were successfully called, else false
 bool set_pose_method(rigid2d::set_pose::Request & req, rigid2d::set_pose::Response &)
 {
+	using namespace rigid2d;
+	
+	RobotPose q;
+	q.theta = req.theta;
+	q.x = req.x;
+	q.y = req.y;
+	dd.setPose(q);
 	return true;
 }
 

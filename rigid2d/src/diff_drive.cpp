@@ -53,6 +53,11 @@ namespace rigid2d
 		m_q.y += d_q.getVy();
 	}
 	
+	void DiffDrive::setPose(RobotPose q)
+	{
+		m_q = q;
+	}
+	
 	Twist2D DiffDrive::getBodyTwist(double l_wheel_phi_new, double r_wheel_phi_new, double dt) const
 	{
 		// Determine wheel angle change
