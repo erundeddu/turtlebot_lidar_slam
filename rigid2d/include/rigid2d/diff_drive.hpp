@@ -65,9 +65,16 @@ namespace rigid2d
 		void setPhysicalParams(double wheel_base, double wheel_radius);
 		
 		/// \brief update diff drive pose 
-		/// \param l_wheel_phi_new - new angular displacement of right wheel of the robot
-		/// \param r_wheel_phi_new - new angular displacement of left wheel of the robot
+		/// \param l_wheel_phi_new - new angular displacement of left wheel of the robot
+		/// \param r_wheel_phi_new - new angular displacement of right wheel of the robot
 		void updatePose(double l_wheel_phi_new, double r_wheel_phi_new);
+		
+		/// \brief get latest body twist given change in wheel angle
+		/// \param l_wheel_phi_new - new angular displacement of left wheel of the robot
+		/// \param r_wheel_phi_new - new angular displacement of right wheel of the robot
+		/// \param dt - time step between old and new configurations
+		/// \return the current body twist
+		Twist2D getBodyTwist(double l_wheel_phi_new, double r_wheel_phi_new, double dt);
 		
 		/// \brief converts a twist to wheel velocities
 		/// \param tw - twist to be converted

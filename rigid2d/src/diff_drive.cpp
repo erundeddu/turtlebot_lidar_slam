@@ -48,7 +48,7 @@ namespace rigid2d
 		// Update absolute wheel angles
 		m_l_wheel_phi += d_phi_l;
 		m_r_wheel_phi += d_phi_r;
-		// Compute body twist
+		// Compute body twist (unit time)
 		double d_theta_b = (d_phi_r - d_phi_l) * m_wheel_radius / m_wheel_base;
 		double d_x_b = (d_phi_r + d_phi_l) * m_wheel_radius / 2;
 		double d_y_b = 0.0;
@@ -61,6 +61,20 @@ namespace rigid2d
 		m_q.theta += d_q.getW();
 		m_q.x += d_q.getVx();
 		m_q.y += d_q.getVy();
+	}
+	
+	Twist2D DiffDrive::getBodyTwist(double l_wheel_phi_new, double r_wheel_phi_new, double dt)
+	{
+		// Determine wheel angle change
+		double d_phi_l = l_wheel_phi_new - m_l_wheel_phi;
+		double d_phi_r = r_wheel_phi_new - m_r_wheel_phi;
+		// Compute body twist (unit time)
+		double d_theta_b = ((d_phi_r - d_phi_l) * m_wheel_radius / m_wheel_base)/dt;
+		double d_x_b = ((d_phi_r + d_phi_l) * m_wheel_radius / 2)/dt;
+		double d_y_b = 0.0;
+		Vector2D d_v(d_x_b, d_y_b);
+		Twist2D d_q_b(d_v, d_theta_b); 
+		return d_q_b;
 	}
 	
 	WheelVel DiffDrive::twist2WheelVel(Twist2D & tw) const

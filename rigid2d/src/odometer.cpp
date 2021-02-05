@@ -25,19 +25,39 @@
 static rigid2d::DiffDrive dd;
 static nav_msgs::Odometry odom;
 static geometry_msgs::TransformStamped odom_trans;
+bool started(false);
 
 /// \brief Updates internal odometry state, publishes a ROS odometry messgae, broadcast the transform between odometry and body frame on tf
 /// \param msg - a pointer to the sensor_msg/JointState message with angles and angular velocities of the robot wheels
 void callback(const sensor_msgs::JointState::ConstPtr & msg)
 {
+	using namespace rigid2d;
+	
 	static ros::NodeHandle nh;
 	static tf2_ros::TransformBroadcaster broadcaster;
-	
-	ros::Time current_time = ros::Time::now();
+	static ros::Time current_time;
+	static ros::Time last_time;
+	current_time = ros::Time::now();
 	
 	// update position in robot
 	double l_phi_wheel_new = msg -> position[0];
 	double r_phi_wheel_new = msg -> position[1];
+
+	if (started)
+	{
+		double dt = (current_time - last_time).toSec();
+		Twist2D tw = dd.getBodyTwist(l_phi_wheel_new, r_phi_wheel_new, dt);
+		odom.twist.twist.linear.x = tw.getVx();
+		odom.twist.twist.linear.y = tw.getVy();
+		odom.twist.twist.angular.z = tw.getW();
+	}
+	else
+	{
+		odom.twist.twist.linear.x = 0;
+		odom.twist.twist.linear.y = 0;
+		odom.twist.twist.angular.z = 0;
+	}
+
 	dd.updatePose(l_phi_wheel_new, r_phi_wheel_new);
 
 	// start referencing http://wiki.ros.org/navigation/Tutorials/RobotSetup/Odom here (Access: 2/1/2021)	
@@ -67,7 +87,9 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	odom_trans.transform.rotation.z = q.z();
 	odom_trans.transform.rotation.w = q.w();
 	broadcaster.sendTransform(odom_trans);
-	
+		
+	last_time = current_time;
+	started = true;
 	// end referencing http://wiki.ros.org/navigation/Tutorials/RobotSetup/Odom here (Access: 2/1/2021)
 }
 
