@@ -1,3 +1,16 @@
+/// \file
+/// \brief A kinematic simulation of a differential drive robot
+///
+/// PARAMETERS:
+///		wheel_base (double): the distance between the robot wheels
+///		wheel_radius (double): the radius of the wheels
+///		left_wheel_joint (string): the name of the left wheel joint
+///		right_wheel_joint (string): the name of the right wheel joint
+/// PUBLISHES:
+///     joint_states (sensor_msgs/JointState): angles and angular velocities of left and right robot wheels
+/// SUBSCRIBES:
+///     cmd_vel (geometry_msgs/Twist): input twist that causes motion of robot wheels
+
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/Twist.h>
@@ -5,20 +18,20 @@
 #include "rigid2d/rigid2d.hpp"
 #include "rigid2d/diff_drive.hpp"
 
-/// TODO review include
-/// TODO node comments
 
 static rigid2d::DiffDrive dd;	
 static rigid2d::WheelVel wv;
 
+/// \brief Updates wheel angular velocities when a Twist message arrives
+/// \param msg - a pointer to the geometry_msg/Twist message describing the commanded twist
 void callback(const geometry_msgs::Twist::ConstPtr & msg)
 {
 	using namespace rigid2d;
 	
 	Vector2D v(msg -> linear.x, msg -> linear.y);
 	Twist2D tw(v, msg -> angular.z);
-	wv.r_vel = (dd.twist2WheelVel(tw)).r_vel;
 	wv.l_vel = (dd.twist2WheelVel(tw)).l_vel;
+	wv.r_vel = (dd.twist2WheelVel(tw)).r_vel;
 }
 
 int main(int argc, char** argv)
@@ -45,19 +58,19 @@ int main(int argc, char** argv)
 	ros::Rate r(100);
 	
 	sensor_msgs::JointState js;
-	js.name = {right_wheel_joint, left_wheel_joint};
+	js.name = {left_wheel_joint, right_wheel_joint};
 	
 	auto current_time = ros::Time::now();
 	auto last_time = ros::Time::now();
 	
 	while(n.ok())
 	{	
-		ros::spinOnce();  //TODO if here or in odometry
+		ros::spinOnce();
 		current_time = ros::Time::now(); 
 		double dt = (current_time - last_time).toSec();
-		dd.updatePose(dd.getRWheelPhi()+dt*wv.r_vel, dd.getLWheelPhi()+dt*wv.l_vel);  // only care about wheel angles
-		js.position = {dd.getRWheelPhi(), dd.getLWheelPhi()};
-		js.velocity = {wv.r_vel, wv.l_vel};
+		dd.updatePose(dd.getLWheelPhi()+dt*wv.l_vel, dd.getRWheelPhi()+dt*wv.r_vel);  // only care about wheel angles
+		js.position = {dd.getLWheelPhi(), dd.getRWheelPhi()};
+		js.velocity = {wv.l_vel, wv.r_vel};
 		pub.publish(js);
 		last_time = current_time;
 		r.sleep();

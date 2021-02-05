@@ -2,7 +2,7 @@
 <package format="2">
   <name>rigid2d</name>
   <version>1.0.0</version>
-  <description>Functions to perform 2D rigid body transformations</description>
+  <description>Functions to perform 2D rigid body transformations and diff-drive robot odometry and simulation</description>
   <maintainer email="edoardorundeddu2021@u.northwestern.edu">Edoardo Rundeddu</maintainer>
   <license>Apache License 2.0</license>
   <author email="edoardorundeddu2021@u.northwestern.edu">Edoardo Rundeddu</author>

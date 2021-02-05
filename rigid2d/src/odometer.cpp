@@ -1,3 +1,18 @@
+/// \file
+/// \brief Publishes odometry messages in a standard ROS way
+///
+/// PARAMETERS:
+///		wheel_base (double): the distance between the robot wheels
+///		wheel_radius (double): the radius of the wheels
+///		left_wheel_joint (string): the name of the left wheel joint
+///		right_wheel_joint (string): the name of the right wheel joint
+///		odom_frame_id (string): the name of the odometry tf frame
+///		body_frame_id (string): the name of the body tf frame
+/// PUBLISHES:
+///     odom (nav_msgs/Odometry): robot pose in the odom_frame_id frame, robot body velocity in body_frame_id
+/// SUBSCRIBES:
+///     joint_states (sensor_msgs/JointState): angles and angular velocities of left and right robot wheels
+
 #include <ros/ros.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
@@ -5,17 +20,14 @@
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/JointState.h>
 #include <string>
-#include "rigid2d/rigid2d.hpp"
 #include "rigid2d/diff_drive.hpp"
-
-/// TODO review include
-/// TODO node comments
-
 
 static rigid2d::DiffDrive dd;
 static nav_msgs::Odometry odom;
 static geometry_msgs::TransformStamped odom_trans;
 
+/// \brief Updates internal odometry state, publishes a ROS odometry messgae, broadcast the transform between odometry and body frame on tf
+/// \param msg - a pointer to the sensor_msg/JointState message with angles and angular velocities of the robot wheels
 void callback(const sensor_msgs::JointState::ConstPtr & msg)
 {
 	static ros::NodeHandle nh;
@@ -24,9 +36,9 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	ros::Time current_time = ros::Time::now();
 	
 	// update position in robot
-	double r_phi_wheel_new = msg -> position[0];
-	double l_phi_wheel_new = msg -> position[1];
-	dd.updatePose(r_phi_wheel_new, l_phi_wheel_new);
+	double l_phi_wheel_new = msg -> position[0];
+	double r_phi_wheel_new = msg -> position[1];
+	dd.updatePose(l_phi_wheel_new, r_phi_wheel_new);
 
 	// start referencing http://wiki.ros.org/navigation/Tutorials/RobotSetup/Odom here (Access: 2/1/2021)	
 	odom.header.stamp = current_time;
