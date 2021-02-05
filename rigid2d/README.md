@@ -1,6 +1,12 @@
 # Rigid 2D transformation Library
-A library for handling transformations in SE(2).
-
+* 2D rigid transformation library
+* Kinematic simulation for differential drive robot
+* Node to output odometry messages and braodcast frame changes to tf in standard ROS way
+# Example Usage
+```
+roslaunch rigid2d fake_turtle_odom.launch
+rosservice call set_pose 2 4 0.5
+```
 
 
 # Conceptual Questions
