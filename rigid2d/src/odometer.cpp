@@ -12,6 +12,8 @@
 ///     odom (nav_msgs/Odometry): robot pose in the odom_frame_id frame, robot body velocity in body_frame_id
 /// SUBSCRIBES:
 ///     joint_states (sensor_msgs/JointState): angles and angular velocities of left and right robot wheels
+/// SERVICES:
+///		set_pose (rigid2d/set_pose): provides a new pose to change where the robot think it is
 
 #include <ros/ros.h>
 #include <tf2/LinearMath/Quaternion.h>
