@@ -332,7 +332,7 @@ TEST_CASE("Twist integration", "[transform]") //Edoardo, Rundeddu
 	REQUIRE(almost_equal(tf_full.getTheta(), PI/2));
 }	
 
-TEST_CASE("Odometry pose update for pure translation", "[odometry]") //Edoardo Rundeddu
+TEST_CASE("Odometry pose update for pure translation", "[odometry]") //Edoardo, Rundeddu
 {
 	using namespace rigid2d;
 	double radius = 1.0;
@@ -343,7 +343,7 @@ TEST_CASE("Odometry pose update for pure translation", "[odometry]") //Edoardo R
 	REQUIRE(almost_equal(dd.getTheta(), 0.0));
 }
 
-TEST_CASE("Odometry pose update for pure rotation", "[odometry]") //Edoardo Rundeddu
+TEST_CASE("Odometry pose update for pure rotation", "[odometry]") //Edoardo, Rundeddu
 {
 	using namespace rigid2d;
 	double base = 2.0;
@@ -355,5 +355,31 @@ TEST_CASE("Odometry pose update for pure rotation", "[odometry]") //Edoardo Rund
 	REQUIRE(almost_equal(dd.getTheta(), PI));
 }
 
+TEST_CASE("Twist to wheel angular velocity conversion for pure linear velocity", "[odometry]") //Edoardo, Rundeddu
+{
+	using namespace rigid2d;
+	double lin_speed = 3.0;
+	Vector2D v(lin_speed, 0.0);
+	Twist2D tw(v, 0.0);
+	double base = 2.0;
+	double radius = 1.0;
+	DiffDrive dd(base, radius);
+	WheelVel wv = dd.twist2WheelVel(tw);
+	REQUIRE(almost_equal(wv.l_vel, lin_speed/radius));
+	REQUIRE(almost_equal(wv.r_vel, lin_speed/radius));
+} 
 
+TEST_CASE("Twist to wheel angular velocity conversion for pure rotational velocity", "[odometry]") //Edoardo, Rundeddu
+{
+	using namespace rigid2d;
+	double rot_speed = 3.0;
+	Vector2D v(0.0, 0.0);
+	Twist2D tw(v, rot_speed);
+	double base = 2.0;
+	double radius = 1.0;
+	DiffDrive dd(base, radius);
+	WheelVel wv = dd.twist2WheelVel(tw);
+	REQUIRE(almost_equal(wv.l_vel, -0.5*rot_speed*base/radius));
+	REQUIRE(almost_equal(wv.r_vel, 0.5*rot_speed*base/radius));
+} 
 	 
