@@ -78,7 +78,7 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	odom.pose.pose.orientation.z = q.z();
 	odom.pose.pose.orientation.w = q.w();
 	
-	static ros::Publisher pub = nh.advertise<nav_msgs::Odometry>("odom", 50);
+	static ros::Publisher pub = nh.advertise<nav_msgs::Odometry>("odom", 1000);
 	pub.publish(odom);
 	
 	odom_trans.header.stamp = current_time;
@@ -118,7 +118,7 @@ int main(int argc, char** argv)
 	
 	ros::init(argc, argv, "odometer");
 	ros::NodeHandle n;
-	ros::Subscriber sub = n.subscribe("joint_states", 50, callback);
+	ros::Subscriber sub = n.subscribe("joint_states", 1000, callback);
 	
 	double wheel_base;
 	double wheel_radius;

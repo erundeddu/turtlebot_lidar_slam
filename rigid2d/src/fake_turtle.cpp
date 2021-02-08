@@ -40,8 +40,8 @@ int main(int argc, char** argv)
 	
 	ros::init(argc, argv, "fake_turtle");
 	ros::NodeHandle n;
-	ros::Publisher pub = n.advertise<sensor_msgs::JointState>("joint_states", 50);
-	ros::Subscriber sub = n.subscribe("cmd_vel", 50, callback);
+	ros::Publisher pub = n.advertise<sensor_msgs::JointState>("joint_states", 1000);
+	ros::Subscriber sub = n.subscribe("cmd_vel", 1000, callback);
 	
 	double wheel_base;
 	double wheel_radius;
@@ -68,6 +68,7 @@ int main(int argc, char** argv)
 		current_time = ros::Time::now(); 
 		double dt = (current_time - last_time).toSec();
 		dd.updatePose(dd.getLWheelPhi()+dt*wv.l_vel, dd.getRWheelPhi()+dt*wv.r_vel);  // only care about wheel angles
+		js.header.stamp = current_time;
 		js.position = {dd.getLWheelPhi(), dd.getRWheelPhi()};
 		js.velocity = {wv.l_vel, wv.r_vel};
 		pub.publish(js);
