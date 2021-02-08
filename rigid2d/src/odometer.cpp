@@ -28,7 +28,7 @@
 static rigid2d::DiffDrive dd;
 static nav_msgs::Odometry odom;
 static geometry_msgs::TransformStamped odom_trans;
-bool started(false);
+static bool started(false);
 
 /// \brief Updates internal odometry state, publishes a ROS odometry messgae, broadcast the transform between odometry and body frame on tf
 /// \param msg - a pointer to the sensor_msg/JointState message with angles and angular velocities of the robot wheels
