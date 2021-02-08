@@ -300,6 +300,12 @@ namespace rigid2d
     /// \return an angle in radians between [-pi, pi]
     double normalize_angle(double rad);
     
+    /// \brief computes the difference between two angles in the range [-pi, pi] assuming small angle displacement
+    /// \param th_new - the new angular position
+    /// \param th_old - the previous angular position (to be subtracted)
+    /// \return the smallest angular difference
+    double normalize_angular_difference(double th_new, double th_old);
+    
     /// \brief computes the transformation corresponding to a rigid body following
     /// a twist for unit time
     /// \param tw - the twist followed by the transformation

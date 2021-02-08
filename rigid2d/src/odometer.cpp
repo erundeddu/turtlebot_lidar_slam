@@ -30,7 +30,7 @@ static nav_msgs::Odometry odom;
 static geometry_msgs::TransformStamped odom_trans;
 static bool started(false);
 
-/// \brief Updates internal odometry state, publishes a ROS odometry messgae, broadcast the transform between odometry and body frame on tf
+/// \brief Updates internal odometry state, publishes a ROS odometry message, broadcast the transform between odometry and body frame on tf
 /// \param msg - a pointer to the sensor_msg/JointState message with angles and angular velocities of the robot wheels
 void callback(const sensor_msgs::JointState::ConstPtr & msg)
 {

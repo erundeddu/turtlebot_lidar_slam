@@ -322,6 +322,20 @@ namespace rigid2d
 		}	
 	}
 	
+	double normalize_angular_difference(double th_new, double th_old)
+	{
+		double dth = th_new - th_old;
+		if (dth < -PI)
+		{
+			dth += 2*PI;
+		}
+		if (dth > PI)
+		{
+			dth -= 2*PI;
+		}
+		return dth;
+	}
+	
 	Transform2D integrateTwist(Twist2D & tw)
 	{	
 		Vector2D v;

@@ -337,8 +337,8 @@ TEST_CASE("Odometry pose update for pure translation", "[odometry]") //Edoardo, 
 	using namespace rigid2d;
 	double radius = 1.0;
 	DiffDrive dd(2.0, radius);
-	dd.updatePose(2*PI, 2*PI);
-	REQUIRE(almost_equal(dd.getX(), 2*radius*PI));
+	dd.updatePose(PI/4, PI/4);
+	REQUIRE(almost_equal(dd.getX(), 2*radius*PI/8));
 	REQUIRE(almost_equal(dd.getY(), 0.0));
 	REQUIRE(almost_equal(dd.getTheta(), 0.0));
 }
@@ -349,10 +349,10 @@ TEST_CASE("Odometry pose update for pure rotation", "[odometry]") //Edoardo, Run
 	double base = 2.0;
 	double radius = 1.0;
 	DiffDrive dd(base, radius);
-	dd.updatePose(-PI, PI);
+	dd.updatePose(-PI/4, PI/4);
 	REQUIRE(almost_equal(dd.getX(), 0.0));
 	REQUIRE(almost_equal(dd.getY(), 0.0));
-	REQUIRE(almost_equal(dd.getTheta(), PI));
+	REQUIRE(almost_equal(dd.getTheta(), PI/4));
 }
 
 TEST_CASE("Twist to wheel angular velocity conversion for pure linear velocity", "[odometry]") //Edoardo, Rundeddu
