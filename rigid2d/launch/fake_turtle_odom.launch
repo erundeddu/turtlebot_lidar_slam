@@ -9,10 +9,10 @@
 	<node pkg="rigid2d" type="odometer" name="odometer"/>
 	<node pkg="rigid2d" type="fake_turtle" name="fake_turtle" output="screen"/>
 	
-	<include file="$(find nuturtle_description)/launch/load.launch"/>
-	<!--param name="robot_description" command="$(find xacro)/xacro $(find nuturtle_description)/urdf/turtlebot3_burger.urdf.xacro" /> 
+	<!--include file="$(find nuturtle_description)/launch/load.launch"/-->
+	<param name="robot_description" command="$(find xacro)/xacro $(find nuturtle_description)/urdf/turtlebot3_burger.urdf.xacro" /> 
 	<rosparam command="load" file="$(find nuturtle_description)/config/diff_params.yaml" />
 	
 	<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" /> 
-	<node name="rviz" pkg="rviz" type="rviz" args="-d '$(find nuturtle_description)/config/model.rviz'"/-->
+	<node name="rviz" pkg="rviz" type="rviz" args="-d '$(find rigid2d)/config/model.rviz'"/>
 </launch>
