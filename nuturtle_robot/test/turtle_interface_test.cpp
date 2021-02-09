@@ -5,6 +5,8 @@
 #include <nuturtlebot/SensorData.h>
 #include <sensor_msgs/JointState.h>
 #include "rigid2d/rigid2d.hpp"
+#include <iostream>
+#include <iterator>
 
 static bool called_trans = false;
 static bool called_rot = false;
@@ -43,16 +45,17 @@ void callback_rot(const nuturtlebot::WheelCommands::ConstPtr & msg)
 void callback_js(const sensor_msgs::JointState::ConstPtr & msg)
 {
 	using namespace rigid2d;
-	called_js = true;
-	CHECK(almost_equal(msg -> position[0], 200*PI/4096));
-	CHECK(almost_equal(msg -> position[1], 100*PI/4096));
-	/*
+	
+	if ((std::size(msg -> position) !=0) || called_js)
+	{
+		called_js = true;
+		CHECK(almost_equal(msg -> position[0], 200*PI/4096));
+		CHECK(almost_equal(msg -> position[1], 100*PI/4096));
+	}
 	else
 	{
-		CHECK(msg -> left_velocity == 0);
-		CHECK(msg -> right_velocity == 0);
+		CHECK(std::size(msg -> position) == 0);
 	}
-	*/
 }
 
 TEST_CASE("pure translation cmd_vel", "[cmd_vel]")
