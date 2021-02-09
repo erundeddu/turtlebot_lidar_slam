@@ -2,9 +2,13 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
 #include <nuturtlebot/WheelCommands.h>
+#include <nuturtlebot/SensorData.h>
+#include <sensor_msgs/JointState.h>
+#include "rigid2d/rigid2d.hpp"
 
-static int called_trans = false;
-static int called_rot = false;
+static bool called_trans = false;
+static bool called_rot = false;
+static bool called_js = false; 
 
 void callback_trans(const nuturtlebot::WheelCommands::ConstPtr & msg)
 {
@@ -34,6 +38,21 @@ void callback_rot(const nuturtlebot::WheelCommands::ConstPtr & msg)
 		CHECK(msg -> left_velocity == 0);
 		CHECK(msg -> right_velocity == 0);
 	}
+}
+
+void callback_js(const sensor_msgs::JointState::ConstPtr & msg)
+{
+	using namespace rigid2d;
+	called_js = true;
+	CHECK(almost_equal(msg -> position[0], 200*PI/4096));
+	CHECK(almost_equal(msg -> position[1], 100*PI/4096));
+	/*
+	else
+	{
+		CHECK(msg -> left_velocity == 0);
+		CHECK(msg -> right_velocity == 0);
+	}
+	*/
 }
 
 TEST_CASE("pure translation cmd_vel", "[cmd_vel]")
@@ -73,3 +92,22 @@ TEST_CASE("pure rotation cmd_vel", "[cmd_vel]")
 	}
 	CHECK(called_rot);
 }
+
+TEST_CASE("encoder data to joint_states", "[sensor_data]")
+{
+	ros::NodeHandle nh;
+	const auto sub = nh.subscribe("joint_states", 1000, callback_js);
+	const auto pub = nh.advertise<nuturtlebot::SensorData>("sensor_data", 1000, true);
+	nuturtlebot::SensorData sd;
+	sd.left_encoder = 100;
+	sd.right_encoder = 50;
+	pub.publish(sd);
+	ros::Rate r(100.0);
+	for(int i = 0; ros::ok() && i != 200; ++i)
+	{
+		ros::spinOnce();
+		r.sleep();
+	}
+	CHECK(called_js);
+}
+

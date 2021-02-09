@@ -78,31 +78,27 @@ void callback_sensor_data(const nuturtlebot::SensorData::ConstPtr & msg)
 	static ros::Time last_time;
 	current_time = ros::Time::now();
 	
-	js.name[0] = "left_wheel_joint";
-	js.name[1] = "right_wheel_joint";
+	js.name = {"left_wheel_joint", "right_wheel_joint"};
 	
-	static double left_rad;
+	static double left_rad = 0.0;
 	left_rad = encoder2rad(msg -> left_encoder);
-	static double left_rad_prev;
-	static double right_rad;
+	static double right_rad = 0.0;
 	right_rad = encoder2rad(msg -> right_encoder);
-	static double right_rad_prev;
+	static double left_rad_prev = 0.0;
+	static double right_rad_prev = 0.0;
 	
 	dd.updatePose(left_rad, right_rad);
-	js.position[0] = left_rad;
-	js.position[1] = right_rad;
+	js.position = {left_rad, right_rad};
 	
 	if (!started)
 	{
-		js.velocity[0] = 0.0;
-		js.velocity[1] = 0.0;
+		js.velocity = {0.0, 0.0};
 		started = true;
 	}
 	else
 	{
 		double dt = (current_time - last_time).toSec();
-		js.velocity[0] = normalize_angular_difference(left_rad, left_rad_prev)/dt;
-		js.velocity[1] = normalize_angular_difference(right_rad, right_rad_prev)/dt;
+		js.velocity = {normalize_angular_difference(left_rad, left_rad_prev)/dt, normalize_angular_difference(right_rad, right_rad_prev)/dt};
 	}
 	last_time = current_time;
 	left_rad_prev = left_rad;
