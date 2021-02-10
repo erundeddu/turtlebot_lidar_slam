@@ -18,7 +18,7 @@
 #include "rigid2d/rigid2d.hpp"
 #include "rigid2d/set_pose.h"
 
-static rigid2d::DiffDrive dd(160.0, 33.0);  // using the turtlebot3 burger wheel base and wheel radius
+static rigid2d::DiffDrive dd(0.16, 0.033);  // using the turtlebot3 burger wheel base and wheel radius
 static bool started(false);
 static bool publish_cmd_vel(false);
 static bool publish_sensor_data(false);
@@ -78,7 +78,7 @@ void callback_sensor_data(const nuturtlebot::SensorData::ConstPtr & msg)
 	static ros::Time last_time;
 	current_time = ros::Time::now();
 	
-	js.name = {"left_wheel_joint", "right_wheel_joint"};
+	js.name = {"wheel_left_joint", "wheel_right_joint"};
 	
 	static double left_rad = 0.0;
 	left_rad = encoder2rad(msg -> left_encoder);

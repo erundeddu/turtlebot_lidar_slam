@@ -47,7 +47,6 @@ void callback(const turtlesim::Pose::ConstPtr& msg)
 
 /// \brief clears turtlesim background, draws rectangular path based on user input in the request, causes the turtle to begin following the path
 /// \param req - service request package of type trect::start::Request (containing x,y position of the rectangle sw corner, width and height)
-/// \param res - service response package of type trect::start::Response (empty)
 /// \return true if all services were successfully called, else false
 bool start_method(trect::start::Request & req, trect::start::Response &)
 {

@@ -9,7 +9,17 @@ add_compile_options(-Wall -Wextra)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS catch_ros nuturtlebot rigid2d roscpp rostest)
+find_package(catkin REQUIRED COMPONENTS catch_ros message_generation nuturtlebot rigid2d roscpp rostest)
+
+if (CATKIN_ENABLE_TESTING)
+	add_rostest(test/turtle_interface.test)
+endif()
+
+find_package(Doxygen)
+if(DOXYGEN_FOUND)
+set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md) # Use the readme in your doxygen docs
+doxygen_add_docs(${PROJECT_NAME}_doxygen include/${PROJECT_NAME}/ README.md ALL)
+endif()
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
@@ -52,11 +62,10 @@ find_package(Boost REQUIRED COMPONENTS system)
 # )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+   FILES
+   control.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -66,10 +75,10 @@ find_package(Boost REQUIRED COMPONENTS system)
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs  # Or other packages containing msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  #std_msgs  # Or other packages containing msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -103,7 +112,7 @@ find_package(Boost REQUIRED COMPONENTS system)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES nuturtle_robot
-   CATKIN_DEPENDS catch_ros nuturtlebot rigid2d roscpp rostest
+   CATKIN_DEPENDS catch_ros message_generation message_runtime nuturtlebot rigid2d roscpp rostest
 #  DEPENDS system_lib
 )
 
@@ -134,6 +143,8 @@ include_directories(
 add_executable(turtle_interface src/turtle_interface.cpp)
 catch_add_rostest_node(turtle_interface_test test/turtle_interface_test.cpp)
 
+add_executable(follow_circle src/follow_circle.cpp)
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -143,6 +154,7 @@ catch_add_rostest_node(turtle_interface_test test/turtle_interface_test.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(turtle_interface ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(follow_circle ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(turtle_interface
@@ -153,7 +165,10 @@ target_link_libraries(turtle_interface_test
   ${catkin_LIBRARIES}
 )
 
-add_rostest(test/turtle_interface.test)
+target_link_libraries(follow_circle
+  ${catkin_LIBRARIES}
+)
+
 
 #############
 ## Install ##
@@ -172,6 +187,10 @@ add_rostest(test/turtle_interface.test)
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
 install(TARGETS turtle_interface
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(TARGETS follow_circle
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
