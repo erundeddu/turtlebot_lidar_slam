@@ -64,7 +64,7 @@ TEST_CASE("pure translation cmd_vel", "[cmd_vel]")
 	const auto sub = nh.subscribe("wheel_cmd", 1000, callback_trans);
 	const auto pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1000, true);
 	geometry_msgs::Twist tw;
-	tw.linear.x = 33.0;
+	tw.linear.x = 0.033;
 	tw.linear.y = 0.0;
 	tw.angular.z = 0.0;
 	pub.publish(tw);
