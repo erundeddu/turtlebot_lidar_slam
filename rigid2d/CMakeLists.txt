@@ -16,8 +16,8 @@ find_package(Boost REQUIRED COMPONENTS system)
 
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
-set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md) # Use the readme in your doxygen docs
-doxygen_add_docs(${PROJECT_NAME}_doxygen include/${PROJECT_NAME}/ README.md ALL)
+	set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md) # Use the readme in your doxygen docs
+	doxygen_add_docs(${PROJECT_NAME}_doxygen include/${PROJECT_NAME}/ README.md ALL)
 endif()
 
 ## Uncomment this if the package has a setup.py. This macro ensures

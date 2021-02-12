@@ -9,10 +9,10 @@ roslaunch nuturtle_robot basic_remote.launch robot:=turtlebot.local
 ```
 * Make the robot follow a circular clockwise trajectory
 ```
-roslaunch nuturtle_robot odom_teleop.launch follow_circle:=true
+roslaunch nuturtle_robot odom_teleop.launch circle:=true
 rosservice call /control 1
 ```
 * Control the robot from the command line
 ```
-roslaunch nuturtle_robot odom_teleop.launch follow_circle:=false
+roslaunch nuturtle_robot odom_teleop.launch circle:=false
 ```
