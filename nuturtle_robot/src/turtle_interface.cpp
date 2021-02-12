@@ -88,6 +88,7 @@ void callback_sensor_data(const nuturtlebot::SensorData::ConstPtr & msg)
 	static double right_rad_prev = 0.0;
 	
 	dd.updatePose(left_rad, right_rad);
+	js.header.stamp = current_time;
 	js.position = {left_rad, right_rad};
 	
 	if (!started)
