@@ -139,7 +139,7 @@ int main(int argc, char** argv)
 	odom_trans.header.frame_id = odom_frame_id;
 	odom_trans.child_frame_id = body_frame_id;
 	
-	dd.setPhysicalParams(wheel_base, wheel_radius);  //FIXME do this with a constructor
+	dd.setPhysicalParams(wheel_base, wheel_radius);
 	ros::ServiceServer srv = n.advertiseService("set_pose", set_pose_method);
 	ros::Rate r(100);
 	

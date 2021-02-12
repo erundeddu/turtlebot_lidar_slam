@@ -6,7 +6,7 @@
 ///		~speed (double): the linear speed at which the robot moves along the circle
 /// PUBLISHES:
 ///		cmd_vel (geometry_msgs/Twist): commanded twist
-///	SERVICES:
+/// SERVICES:
 ///		control (nuturtle_robot/control): causes the robot to travel either clockwise, counter clockwise or stop
 
 #include <ros/ros.h>
