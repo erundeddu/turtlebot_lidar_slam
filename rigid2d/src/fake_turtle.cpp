@@ -53,7 +53,7 @@ int main(int argc, char** argv)
 	n.getParam("left_wheel_joint", left_wheel_joint);
 	n.getParam("right_wheel_joint", right_wheel_joint);
 	
-	dd.setPhysicalParams(wheel_base, wheel_radius);  //FIXME try this with a constructor here
+	dd.setPhysicalParams(wheel_base, wheel_radius); 
 	ros::Rate r(100);
 	
 	sensor_msgs::JointState js;

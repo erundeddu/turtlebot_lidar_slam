@@ -1,7 +1,8 @@
 # Rigid 2D transformation Library
 * 2D rigid transformation library
 * Kinematic simulation for differential drive robot
-* Node to output odometry messages and braodcast frame changes to tf in standard ROS way
+* Node to output odometry messages and broadcast frame changes to tf in standard ROS way
+* The comments in the code reference equations in doc/Kinematics.pdf
 # Example Usage
 ```
 roslaunch rigid2d fake_turtle_odom.launch

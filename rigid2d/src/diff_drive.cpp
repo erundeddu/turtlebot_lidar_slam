@@ -41,8 +41,8 @@ namespace rigid2d
 		m_l_wheel_phi = normalize_angle(m_l_wheel_phi);
 		m_r_wheel_phi = normalize_angle(m_r_wheel_phi);
 		// Compute body twist (unit time)
-		double d_theta_b = (d_phi_r - d_phi_l) * m_wheel_radius / m_wheel_base;
-		double d_x_b = (d_phi_r + d_phi_l) * m_wheel_radius / 2;
+		double d_theta_b = (d_phi_r - d_phi_l) * m_wheel_radius / m_wheel_base;  // Equations 2-8
+		double d_x_b = (d_phi_r + d_phi_l) * m_wheel_radius / 2;  // Equation 1 
 		double d_y_b = 0.0;
 		Vector2D d_v(d_x_b, d_y_b);
 		Twist2D d_q_b(d_v, d_theta_b);  
@@ -66,8 +66,8 @@ namespace rigid2d
 		double d_phi_l = l_wheel_phi_new - m_l_wheel_phi;
 		double d_phi_r = r_wheel_phi_new - m_r_wheel_phi;
 		// Compute body twist (unit time)
-		double d_theta_b = ((d_phi_r - d_phi_l) * m_wheel_radius / m_wheel_base)/dt;
-		double d_x_b = ((d_phi_r + d_phi_l) * m_wheel_radius / 2)/dt;
+		double d_theta_b = ((d_phi_r - d_phi_l) * m_wheel_radius / m_wheel_base)/dt;  // Equations 2-8 (separating changes in position and time)
+		double d_x_b = ((d_phi_r + d_phi_l) * m_wheel_radius / 2)/dt;  // Equation 1 (separating changes in position and time)
 		double d_y_b = 0.0;
 		Vector2D d_v(d_x_b, d_y_b);
 		Twist2D d_q_b(d_v, d_theta_b); 
@@ -77,8 +77,8 @@ namespace rigid2d
 	WheelVel DiffDrive::twist2WheelVel(const Twist2D & tw) const
 	{
 		WheelVel wv;
-		wv.l_vel = (2*tw.getVx() - tw.getW()*m_wheel_base)/(2.0*m_wheel_radius);
-		wv.r_vel = (2*tw.getVx() + tw.getW()*m_wheel_base)/(2.0*m_wheel_radius);
+		wv.l_vel = (2*tw.getVx() - tw.getW()*m_wheel_base)/(2.0*m_wheel_radius);  // Equations 13-14
+		wv.r_vel = (2*tw.getVx() + tw.getW()*m_wheel_base)/(2.0*m_wheel_radius);  // Equations 9-12
 		return wv;
 	}
 	
