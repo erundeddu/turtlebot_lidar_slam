@@ -16,7 +16,9 @@ rosservice call /control 1
 ```
 roslaunch nuturtle_robot odom_teleop.launch follow_circle:=false
 ```
+*Linear motion - final odometry pose is x = 0.0035 m, y = -0.0001 m, theta = 0.015
 ![Demonstration](images/robot_linear.gif)
 ![Demonstration](images/rviz_linear.gif)
+*Rotational motion - final odometry pose is x = -0.0005 m, y = -0.0032 m, theta = 0.001
 ![Demonstration](images/robot_rotational.gif)
 ![Demonstration](images/rviz_rotational.gif)
