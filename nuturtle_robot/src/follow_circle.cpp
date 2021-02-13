@@ -60,7 +60,7 @@ int main(int argc, char** argv)
 				tw.angular.z = -speed/circle_radius;
 				break;
 			case 2:
-				tw.linear.x = speed;
+				tw.linear.x = -speed;
 				tw.angular.z = speed/circle_radius;
 				break;
 			case 3:
