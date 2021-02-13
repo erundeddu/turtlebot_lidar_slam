@@ -27,4 +27,5 @@ All demo gif are shown at 2x speed
 ![Demonstration](images/rviz_rotational.gif)
 
 * Circular motion - final odometry pose is x = 0.0088 m, y = 0.0004 m, theta = -0.019
-
+![Demonstration](images/robot_circle.gif)
+![Demonstration](images/rviz_circle.gif)
