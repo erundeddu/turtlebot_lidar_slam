@@ -29,3 +29,8 @@ All demo gif are shown at 2x speed
 * Circular motion - final odometry pose is x = 0.0088 m, y = 0.0004 m, theta = -0.019
 ![Demonstration](images/robot_circle.gif)
 ![Demonstration](images/rviz_circle.gif)
+
+* Manually controlled motion - final odometry pose is x = 0.0293 m, y = -0.0064 m, theta = -0.078
+Manually driving the robot to make it trace a circle was more challenging and led to a less accurate final position (compared to the initial 0 0 0) because of the discretization of the wheel speeds sent by the teleop command line gui and because the rotational and linear components of the robot body twist have to be controlled simultaneously and match each other to trace a good circle.
+![Demonstration](images/robot_manual.gif)
+![Demonstration](images/rviz_manual.gif)
