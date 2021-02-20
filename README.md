@@ -7,3 +7,4 @@ This repository consists of several ROS packages
 - trect - makes a turtlesim turtle move along a rectangular path
 - rigid2d - contains functions for performing 2D rigid body transformations, diff-drive robot definition, and ROS nodes for odometry and diff-drive robot kinematic simulation
 - nuturtle\_robot - contains code to interact with the turtlebot hardware and run nodes on the turtlebot from a computer
+- nurtlesim - simulation of robot kinematics and of landmark detection through a sensor

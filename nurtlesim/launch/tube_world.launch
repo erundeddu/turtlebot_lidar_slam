@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<launch>
+	<param name="left_wheel_joint" value="wheel_left_joint"/>
+	<param name="right_wheel_joint" value="wheel_right_joint"/>
+	<param name="odom_frame_id" value="odom"/>
+	<param name="body_frame_id" value="base_footprint"/>
+
+	<node pkg="turtlebot3_teleop" type="turtlebot3_teleop_key" name="turtlebot3_teleop_keyboard" output="screen"/>
+	<node pkg="rigid2d" type="odometer" name="odometer"/>
+	<node pkg="tube_world" type="fake_turtle" name="fake_turtle" output="screen"/>
+	
+	<!--include file="$(find nuturtle_description)/launch/load.launch"/-->
+	<param name="robot_description" command="$(find xacro)/xacro $(find nuturtle_description)/urdf/turtlebot3_burger.urdf.xacro" /> 
+	<rosparam command="load" file="$(find nuturtle_description)/config/diff_params.yaml" />
+	
+	<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" /> 
+	<node name="rviz" pkg="rviz" type="rviz" args="-d '$(find rigid2d)/config/model.rviz'"/>
+</launch>
