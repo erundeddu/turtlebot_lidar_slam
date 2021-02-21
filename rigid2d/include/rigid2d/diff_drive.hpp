@@ -61,7 +61,9 @@ namespace rigid2d
 		/// \brief update diff drive pose based on wheel angles
 		/// \param l_wheel_phi_new - new angular displacement of left wheel of the robot
 		/// \param r_wheel_phi_new - new angular displacement of right wheel of the robot
-		void updatePose(double l_wheel_phi_new, double r_wheel_phi_new);
+		/// \param l_slip - fraction of the left wheel rotation subject to slip
+		/// \param r_slip - fraction of the right wheel rotation subject to slip
+		void updatePose(double l_wheel_phi_new, double r_wheel_phi_new, double l_slip=0.0, double r_slip=0.0);
 		
 		/// \brief update diff drive pose based on commanded values
 		/// \param q - new commanded pose of the robot

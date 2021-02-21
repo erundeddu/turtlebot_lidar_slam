@@ -30,7 +30,7 @@ namespace rigid2d
 		m_wheel_radius = wheel_radius;
 	}
 	
-	void DiffDrive::updatePose(double l_wheel_phi_new, double r_wheel_phi_new)
+	void DiffDrive::updatePose(double l_wheel_phi_new, double r_wheel_phi_new, double l_slip=0.0, double r_slip=0.0)
 	{
 		// Determine wheel angle change
 		double d_phi_l = normalize_angular_difference(normalize_angle(l_wheel_phi_new), m_l_wheel_phi);
@@ -41,8 +41,8 @@ namespace rigid2d
 		m_l_wheel_phi = normalize_angle(m_l_wheel_phi);
 		m_r_wheel_phi = normalize_angle(m_r_wheel_phi);
 		// Compute body twist (unit time)
-		double d_theta_b = (d_phi_r - d_phi_l) * m_wheel_radius / m_wheel_base;  // Equations 2-8
-		double d_x_b = (d_phi_r + d_phi_l) * m_wheel_radius / 2;  // Equation 1 
+		double d_theta_b = (d_phi_r*(1-r_slip) - d_phi_l*(1-l_slip)) * m_wheel_radius / m_wheel_base;  // Equations 2-8
+		double d_x_b = (d_phi_r*(1-r_slip) + d_phi_l*(1-l_slip)) * m_wheel_radius / 2;  // Equation 1 
 		double d_y_b = 0.0;
 		Vector2D d_v(d_x_b, d_y_b);
 		Twist2D d_q_b(d_v, d_theta_b);  
