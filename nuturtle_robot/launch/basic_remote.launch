@@ -8,4 +8,6 @@
 		<param name="~baud" value="115200"/>
 	</node>
 	<!-- citation end source: http://wiki.ros.org/rosserial_python accessed Feb 5, 2021 -->
+	<node machine="turtlebot" pkg="hls_lfcd_lds_driver" type="hlds_laser_publisher" name="hlds_laser_publisher"/>
+	<node pkg="tf" type="static_transform_publisher" name="laser" args="0 0 0 0 0 0 1 base_scan laser 10"/>
 </launch>

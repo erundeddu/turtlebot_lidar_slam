@@ -9,7 +9,6 @@
 	<node pkg="rigid2d" type="odometer" name="odometer"/>
 	<node pkg="tube_world" type="fake_turtle" name="fake_turtle" output="screen"/>
 	
-	<!--include file="$(find nuturtle_description)/launch/load.launch"/-->
 	<param name="robot_description" command="$(find xacro)/xacro $(find nuturtle_description)/urdf/turtlebot3_burger.urdf.xacro" /> 
 	<rosparam command="load" file="$(find nuturtle_description)/config/diff_params.yaml" />
 	
