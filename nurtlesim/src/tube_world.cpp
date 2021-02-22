@@ -1,30 +1,54 @@
 /// \file
-/// \brief A kinematic simulation of a differential drive robot
+/// \brief A kinematic simulation of a differential drive robot subject to sensor noise and wheel slippage, showing the location of obstacles in rviz
 ///
 /// PARAMETERS:
 ///		wheel_base (double): the distance between the robot wheels
 ///		wheel_radius (double): the radius of the wheels
 ///		left_wheel_joint (string): the name of the left wheel joint
 ///		right_wheel_joint (string): the name of the right wheel joint
+///		vx_noise (double): Gaussian noise on the commanded linear twist
+///		w_noise (double): Gaussian noise on the commanded rotational twist
+///		tube_var (std::vector<double>): covariance matrix of x and y relative sensor noise (x, y, xy)  //TODO add
+///		x_tubes (std::vector<double>): vector containing x coordinates of the obstacle tubes
+///		y_tubes (std::vector<double>): vector containing y coordinates of the obstacle tubes
+///		tube_radius (double): radius of the obstacle tubes
+///		d_max_tubes (double): maximum distance beyond which tubes are not visible
 /// PUBLISHES:
-///     joint_states (sensor_msgs/JointState): angles and angular velocities of left and right robot wheels
+///     joint_states (sensor_msgs/JointState): angles and angular velocities of left and right robot wheels  //TODO remove?
+///		visualization_marker_array (visualization_msgs/MarkerArray): true location of the tubes in the environment
+///		real_path (nav_msgs/Path): trajectory of the robot
+///		fake_sensor (visualization_msgs/MarkerArray): measured position of the tubes relative to the robot
 /// SUBSCRIBES:
 ///     cmd_vel (geometry_msgs/Twist): input twist that causes motion of robot wheels
 
 #include <ros/ros.h>
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/Twist.h>
+#include <geometry_msgs/Point.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <visualization_msgs/MarkerArray.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <nav_msgs/Path.h>
 #include <string>
+#include <random>
+#include <vector>
 #include "rigid2d/rigid2d.hpp"
 #include "rigid2d/diff_drive.hpp"
-#include <random>
-
 
 static rigid2d::DiffDrive dd;	
 static rigid2d::WheelVel wv;
 // Noise parameters
 static double vx_noise = 0.01;
 static double w_noise = 0.01;
+
+static std::vector<double> x_tubes;  //TODO move these in main?
+static std::vector<double> y_tubes;
+static std::vector<double> tube_var = {0.01, 0.01, 0.0};
+static double tube_radius = 0.01;
+static double d_max_tubes = 1.0;
+//TODO covariance matrix for relative x-y sensor
 
 /// \brief Seeds the random number generation once
 /// \return a reference to the pseudo-random number generator object
@@ -57,7 +81,12 @@ int main(int argc, char** argv)
 	
 	ros::init(argc, argv, "tube_world");
 	ros::NodeHandle n;
-	ros::Publisher pub = n.advertise<sensor_msgs::JointState>("joint_states", 1000);
+	//ros::Publisher pub = n.advertise<sensor_msgs::JointState>("joint_states", 1000);
+	ros::Publisher pub_tubes = n.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 1000, true);
+	ros::Publisher pub_path = n.advertise<nav_msgs::Path>("real_path", 1000);
+	ros::Publisher pub_sensor = n.adverise<visualization_msgs::MarkerArray>("fake_sensor", 1000);
+	tf2_ros::TransformBroadcaster broadcaster;
+	
 	ros::Subscriber sub = n.subscribe("cmd_vel", 1000, callback);
 	
 	double wheel_base;
@@ -70,20 +99,47 @@ int main(int argc, char** argv)
 	dd.setPhysicalParams(wheel_base, wheel_radius);
 	n.getParam("left_wheel_joint", left_wheel_joint);
 	n.getParam("right_wheel_joint", right_wheel_joint); 
-	
 	n.getParam("vx_noise", vx_noise);
 	n.getParam("w_noise", w_noise);
+	
+	n.getParam("x_tubes", x_tubes);
+	n.getParam("y_tubes", y_tubes);
+	n.getParam("tube_radius", tube_radius);
+	n.getParam("d_max_tubes", d_max_tubes);
 
 	double slip_max = 0.5;
 	n.getParam("slip_max", slip_max);
 	std::uniform_real_distribution<> slip_unif(0, slip_max);
 	
-	ros::Rate r(100);
+	ros::Rate r(10);
 	sensor_msgs::JointState js;
 	js.name = {left_wheel_joint, right_wheel_joint};
 	
 	auto current_time = ros::Time::now();
 	auto last_time = ros::Time::now();
+	
+	visualization_msgs::Marker[] real_markers;
+	real_markers.header.stamp = current_time;
+	real_markers.ns = "real";
+	real_markers.type = visualization_msgs::MarkerArray::CYLINDER;
+	real_markers.action = visualization_msgs::MarkerArray::ADD;
+	for(int i = 0; i < x_tubes.size(); i++)
+	{
+		geometry_msgs::Point p;
+		p.x = x_tubes[i];
+		p.y = y_tubes[i];
+		real_markers.points.push_back(p);
+	}
+	pub_tubes.publish(real_markers);
+	
+	geometry_msgs::TransformStamped trans;
+	trans.header.frame_id = "world";
+	trans.child_frame_id = "turtle";
+	
+	nav_msgs::Path path;
+	visualization_msgs::Marker[] relative_markers;
+	relative_markers.ns = "relative";
+	relative_markers.type = visualization_msgs::MarkerArray::CYLINDER;
 	
 	while(n.ok())
 	{	
@@ -91,10 +147,49 @@ int main(int argc, char** argv)
 		current_time = ros::Time::now(); 
 		double dt = (current_time - last_time).toSec();
 		dd.updatePose(dd.getLWheelPhi()+dt*wv.l_vel, dd.getRWheelPhi()+dt*wv.r_vel, slip_unif(get_random()), slip_unif(get_random()));
-		js.header.stamp = current_time;
-		js.position = {dd.getLWheelPhi(), dd.getRWheelPhi()};
-		js.velocity = {wv.l_vel, wv.r_vel};
-		pub.publish(js);
+		//js.header.stamp = current_time;
+		//js.position = {dd.getLWheelPhi(), dd.getRWheelPhi()};
+		//js.velocity = {wv.l_vel, wv.r_vel};
+		//pub.publish(js);
+		
+		// Publish frame transformation
+		trans.header.stamp = current_time;
+		trans.transform.translation.x = dd.getX();
+		trans.transform.translation.y = dd.getY();
+		trans.transform.translation.z = 0.0;
+		tf2::Quaternion q;
+		q.setRPY(0, 0, dd.getTheta());
+		trans.transform.rotation.x = q.x();
+		trans.transform.rotation.y = q.y();
+		trans.transform.rotation.z = q.z();
+		trans.transform.rotation.w = q.w();
+		broadcaster.sendTransform(trans);	
+		
+		//Publish path
+		path.header.stamp = current_time;
+		geometry_msgs::PoseStamped pos;
+		pos.header.stamp = current_time;
+		pos.pose.position.x = dd.getX();
+		pos.pose.position.y = dd.getY();
+		pos.pose.position.z = 0.0;
+		pos.pose.orientation.x = q.x();
+		pos.pose.orientation.y = q.y();
+		pos.pose.orientation.z = q.z();
+		pos.pose.orientation.w = q.w();
+		path.poses.push_back(pos);
+		pub_path.publish(path);
+		
+		//Publish relative marker pose  //TODO add covariance noise
+		relative_markers.header.stamp = current_time;  
+		for(int i = 0; i < x_tubes.size(); i++)
+		{
+			geometry_msgs::Point p;
+			p.x = x_tubes[i];  //TODO calculate relative position
+			p.y = y_tubes[i];
+			relative_markers.points.push_back(p);
+		}
+		pub_tubes.publish(relative_markers);
+		
 		last_time = current_time;
 		r.sleep();
 	}
