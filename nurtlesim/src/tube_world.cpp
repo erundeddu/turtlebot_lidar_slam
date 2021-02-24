@@ -27,6 +27,7 @@
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <visualization_msgs/Marker.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <geometry_msgs/TransformStamped.h>
@@ -70,7 +71,7 @@ void callback(const geometry_msgs::Twist::ConstPtr & msg)
 	static std::normal_distribution<> vx_gauss(0, vx_noise);
 	static std::normal_distribution<> w_gauss(0, w_noise);	
 	Vector2D v(msg -> linear.x + vx_gauss(get_random()), msg -> linear.y);
-	Twist2D tw(v, msg -> angular.z + w_noise(get_random());
+	Twist2D tw(v, msg -> angular.z + w_gauss(get_random()));
 	wv.l_vel = (dd.twist2WheelVel(tw)).l_vel;
 	wv.r_vel = (dd.twist2WheelVel(tw)).r_vel;
 }
@@ -84,7 +85,7 @@ int main(int argc, char** argv)
 	//ros::Publisher pub = n.advertise<sensor_msgs::JointState>("joint_states", 1000);
 	ros::Publisher pub_tubes = n.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 1000, true);
 	ros::Publisher pub_path = n.advertise<nav_msgs::Path>("real_path", 1000);
-	ros::Publisher pub_sensor = n.adverise<visualization_msgs::MarkerArray>("fake_sensor", 1000);
+	ros::Publisher pub_sensor = n.advertise<visualization_msgs::MarkerArray>("fake_sensor", 1000);
 	tf2_ros::TransformBroadcaster broadcaster;
 	
 	ros::Subscriber sub = n.subscribe("cmd_vel", 1000, callback);
@@ -118,28 +119,27 @@ int main(int argc, char** argv)
 	auto current_time = ros::Time::now();
 	auto last_time = ros::Time::now();
 	
-	visualization_msgs::Marker[] real_markers;
-	real_markers.header.stamp = current_time;
-	real_markers.ns = "real";
-	real_markers.type = visualization_msgs::MarkerArray::CYLINDER;
-	real_markers.action = visualization_msgs::MarkerArray::ADD;
-	for(int i = 0; i < x_tubes.size(); i++)
+	visualization_msgs::MarkerArray real_marker_arr;
+	
+	for(std::size_t i = 0; i < x_tubes.size(); ++i)
 	{
-		geometry_msgs::Point p;
-		p.x = x_tubes[i];
-		p.y = y_tubes[i];
-		real_markers.points.push_back(p);
+		visualization_msgs::Marker m;
+		m.header.stamp = current_time;
+		m.ns = "real";
+		m.type = visualization_msgs::Marker::CYLINDER;
+		m.action = visualization_msgs::Marker::ADD;
+		m.pose.position.x = x_tubes[i];
+		m.pose.position.y = y_tubes[i];
+		real_marker_arr.markers.push_back(m);
 	}
-	pub_tubes.publish(real_markers);
+	pub_tubes.publish(real_marker_arr);
 	
 	geometry_msgs::TransformStamped trans;
 	trans.header.frame_id = "world";
 	trans.child_frame_id = "turtle";
 	
 	nav_msgs::Path path;
-	visualization_msgs::Marker[] relative_markers;
-	relative_markers.ns = "relative";
-	relative_markers.type = visualization_msgs::MarkerArray::CYLINDER;
+	visualization_msgs::MarkerArray relative_marker_arr;
 	
 	while(n.ok())
 	{	
@@ -180,15 +180,31 @@ int main(int argc, char** argv)
 		pub_path.publish(path);
 		
 		//Publish relative marker pose  //TODO add covariance noise
-		relative_markers.header.stamp = current_time;  
-		for(int i = 0; i < x_tubes.size(); i++)
+		Vector2D robot_pos(dd.getX(), dd.getY());
+		Transform2D t(robot_pos, dd.getTheta());
+		for(std::size_t i = 0; i < x_tubes.size(); ++i)
 		{
-			geometry_msgs::Point p;
-			p.x = x_tubes[i];  //TODO calculate relative position
-			p.y = y_tubes[i];
-			relative_markers.points.push_back(p);
+			visualization_msgs::Marker m;
+			m.header.stamp = current_time; 
+			m.ns = "relative";
+			m.type = visualization_msgs::Marker::CYLINDER;
+			
+			Vector2D p_abs(x_tubes[i], y_tubes[i]);
+			Vector2D p_rel = t(p_abs);
+			double mag = magnitude(p_rel);
+			if (mag <= d_max_tubes)
+			{
+				m.action = visualization_msgs::Marker::ADD;
+			}
+			else
+			{
+				m.action = visualization_msgs::Marker::DELETE;
+			}
+			m.pose.position.x = p_rel.x;
+			m.pose.position.y = p_rel.y;
+			relative_marker_arr.markers.push_back(m);
 		}
-		pub_tubes.publish(relative_markers);
+		pub_tubes.publish(relative_marker_arr);
 		
 		last_time = current_time;
 		r.sleep();

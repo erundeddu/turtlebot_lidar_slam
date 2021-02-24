@@ -30,7 +30,7 @@ namespace rigid2d
 		m_wheel_radius = wheel_radius;
 	}
 	
-	void DiffDrive::updatePose(double l_wheel_phi_new, double r_wheel_phi_new, double l_slip=0.0, double r_slip=0.0)
+	void DiffDrive::updatePose(double l_wheel_phi_new, double r_wheel_phi_new, double l_slip, double r_slip)
 	{
 		// Determine wheel angle change
 		double d_phi_l = normalize_angular_difference(normalize_angle(l_wheel_phi_new), m_l_wheel_phi);

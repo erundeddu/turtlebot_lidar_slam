@@ -12,7 +12,7 @@ add_compile_options(-Wall -Wextra)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS rigid2d roscpp)
+find_package(catkin REQUIRED COMPONENTS nav_msgs rigid2d roscpp sensor_msgs std_msgs tf2 tf2_ros visualization_msgs)
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
@@ -22,7 +22,6 @@ if(DOXYGEN_FOUND)
 	set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md) # Use the readme in your doxygen docs
 	doxygen_add_docs(${PROJECT_NAME}_doxygen include/${PROJECT_NAME}/ README.md ALL)
 endif()
-
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -113,7 +112,7 @@ endif()
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES nurtlesim
-   CATKIN_DEPENDS rigid2d roscpp
+   CATKIN_DEPENDS nav_msgs rigid2d roscpp sensor_msgs std_msgs tf2 tf2_ros visualization_msgs
 #  DEPENDS system_lib
 )
 
