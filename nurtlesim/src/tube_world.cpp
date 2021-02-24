@@ -8,13 +8,12 @@
 ///		right_wheel_joint (string): the name of the right wheel joint
 ///		vx_noise (double): Gaussian noise on the commanded linear twist
 ///		w_noise (double): Gaussian noise on the commanded rotational twist
-///		tube_var (std::vector<double>): covariance matrix of x and y relative sensor noise (x, y, xy)  //TODO add
+///		tube_var (std::vector<double>): covariance matrix of x and y relative sensor noise (x, y, xy)
 ///		x_tubes (std::vector<double>): vector containing x coordinates of the obstacle tubes
 ///		y_tubes (std::vector<double>): vector containing y coordinates of the obstacle tubes
 ///		tube_radius (double): radius of the obstacle tubes
 ///		d_max_tubes (double): maximum distance beyond which tubes are not visible
 /// PUBLISHES:
-///     joint_states (sensor_msgs/JointState): angles and angular velocities of left and right robot wheels  //TODO remove?
 ///		visualization_marker_array (visualization_msgs/MarkerArray): true location of the tubes in the environment
 ///		real_path (nav_msgs/Path): trajectory of the robot
 ///		fake_sensor (visualization_msgs/MarkerArray): measured position of the tubes relative to the robot
@@ -33,6 +32,7 @@
 #include <tf2_ros/transform_broadcaster.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <nav_msgs/Path.h>
+#include <armadillo>
 #include <string>
 #include <random>
 #include <vector>
@@ -44,13 +44,6 @@ static rigid2d::WheelVel wv;
 // Noise parameters
 static double vx_noise = 0.01;
 static double w_noise = 0.01;
-
-static std::vector<double> x_tubes;  //TODO move these in main?
-static std::vector<double> y_tubes;
-static std::vector<double> tube_var = {0.01, 0.01, 0.0};
-static double tube_radius = 0.01;
-static double d_max_tubes = 1.0;
-//TODO covariance matrix for relative x-y sensor
 
 /// \brief Seeds the random number generation once
 /// \return a reference to the pseudo-random number generator object
@@ -104,18 +97,29 @@ int main(int argc, char** argv)
 	n.getParam("vx_noise", vx_noise);
 	n.getParam("w_noise", w_noise);
 	
+	std::vector<double> x_tubes;
+	std::vector<double> y_tubes;
+	std::vector<double> tube_var = {0.01, 0.01, 0.0};
+	double tube_radius = 0.01;
+	double d_max_tubes = 1.0;
+	double slip_max = 0.5;
 	n.getParam("x_tubes", x_tubes);
 	n.getParam("y_tubes", y_tubes);
+	n.getParam("tube_var", tube_var);
 	n.getParam("tube_radius", tube_radius);
 	n.getParam("d_max_tubes", d_max_tubes);
-
-	double slip_max = 0.5;
 	n.getParam("slip_max", slip_max);
+	std::normal_distribution<> xsense_gauss(0.0, tube_var[0]);
+	std::normal_distribution<> ysense_gauss(0.0, tube_var[1]);
 	std::uniform_real_distribution<> slip_unif(0, slip_max);
 	
+	arma::Mat<double> Q = { {tube_var[0], tube_var[2]},
+							{tube_var[2], tube_var[1]} };
+	arma::Mat<double> L = arma::chol(Q, "lower");
+	
 	ros::Rate r(10);
-	sensor_msgs::JointState js;
-	js.name = {left_wheel_joint, right_wheel_joint};
+	//sensor_msgs::JointState js;
+	//js.name = {left_wheel_joint, right_wheel_joint};
 	
 	auto current_time = ros::Time::now();
 	auto last_time = ros::Time::now();
@@ -210,7 +214,10 @@ int main(int argc, char** argv)
 			m.type = visualization_msgs::Marker::CYLINDER;
 			
 			Vector2D p_abs(x_tubes[i], y_tubes[i]);
-			Vector2D p_rel = tinv(p_abs);
+			double ux = xsense_gauss(get_random());
+			double uy = ysense_gauss(get_random());
+			Vector2D p_noise(L(0,0)*ux, L(1,0)*ux + L(1,1)*uy);
+			Vector2D p_rel = tinv(p_abs) + p_noise;
 			double mag = magnitude(p_rel);
 			if (mag <= d_max_tubes)
 			{

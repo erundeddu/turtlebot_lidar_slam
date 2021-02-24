@@ -7,6 +7,7 @@
 	<param name="slip_max" value="0"/>
 	<rosparam param="x_tubes">[1, -1, 0.5]</rosparam>
 	<rosparam param="y_tubes">[1, 1.5, 0.5]</rosparam>
+	<rosparam param="tube_var">[0.02, 0.02, 0.005]</rosparam>
 	<param name="tube_radius" value="0.0762"/>
 	<param name="d_max_tubes" value="2.0"/>
 	<rosparam command="load" file="$(find nuturtle_description)/config/diff_params.yaml" />

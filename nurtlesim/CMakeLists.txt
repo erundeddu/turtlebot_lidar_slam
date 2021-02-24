@@ -17,6 +17,8 @@ find_package(catkin REQUIRED COMPONENTS nav_msgs rigid2d roscpp sensor_msgs std_
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
 
+find_package(Armadillo REQUIRED)
+
 find_package(Doxygen)
 if(DOXYGEN_FOUND)
 	set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md) # Use the readme in your doxygen docs
@@ -155,6 +157,7 @@ add_dependencies(tube_world ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTE
 ## Specify libraries to link a library or executable target against
 target_link_libraries(tube_world
   ${catkin_LIBRARIES}
+  ${ARMADILLO_LIBRARIES}
 )
 
 #############
