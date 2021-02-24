@@ -2,15 +2,16 @@
 <launch>
 	<param name="left_wheel_joint" value="wheel_left_joint"/>
 	<param name="right_wheel_joint" value="wheel_right_joint"/>
-	<param name="vx_noise" value="0.01"/>
-	<param name="w_noise" value="0.001"/>
-	<param name="x_tubes" value="[0.1, 0.2, 0.3]"/>
-	<param name="y_tubes" value="[0.1, 0.2, 0.3]"/>
+	<param name="vx_noise" value="0"/>
+	<param name="w_noise" value="0"/>
+	<param name="slip_max" value="0"/>
+	<rosparam param="x_tubes">[1, -1, 0.5]</rosparam>
+	<rosparam param="y_tubes">[1, 1.5, 0.5]</rosparam>
 	<param name="tube_radius" value="0.0762"/>
 	<param name="d_max_tubes" value="2.0"/>
 	<rosparam command="load" file="$(find nuturtle_description)/config/diff_params.yaml" />
 	
 	<node pkg="turtlebot3_teleop" type="turtlebot3_teleop_key" name="turtlebot3_teleop_keyboard" output="screen"/>
-	<node pkg="nurtlesim" type="tube_world" name="tube_world"/>
+	<node pkg="nurtlesim" type="tube_world" name="tube_world" output="screen"/>
 	<node name="rviz" pkg="rviz" type="rviz" args="-d '$(find nurtlesim)/config/sim.rviz'"/>
 </launch>

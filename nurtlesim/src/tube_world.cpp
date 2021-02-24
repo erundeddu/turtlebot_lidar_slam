@@ -22,6 +22,7 @@
 ///     cmd_vel (geometry_msgs/Twist): input twist that causes motion of robot wheels
 
 #include <ros/ros.h>
+#include <ros/console.h>
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/Point.h>
@@ -68,8 +69,8 @@ std::mt19937 & get_random()  // function from lecture notes
 void callback(const geometry_msgs::Twist::ConstPtr & msg)
 {
 	using namespace rigid2d;
-	static std::normal_distribution<> vx_gauss(0, vx_noise);
-	static std::normal_distribution<> w_gauss(0, w_noise);	
+	static std::normal_distribution<> vx_gauss(0.0, vx_noise);
+	static std::normal_distribution<> w_gauss(0.0, w_noise);	
 	Vector2D v(msg -> linear.x + vx_gauss(get_random()), msg -> linear.y);
 	Twist2D tw(v, msg -> angular.z + w_gauss(get_random()));
 	wv.l_vel = (dd.twist2WheelVel(tw)).l_vel;
@@ -125,11 +126,25 @@ int main(int argc, char** argv)
 	{
 		visualization_msgs::Marker m;
 		m.header.stamp = current_time;
+		m.header.frame_id = "world";
 		m.ns = "real";
+		m.id = i;
 		m.type = visualization_msgs::Marker::CYLINDER;
 		m.action = visualization_msgs::Marker::ADD;
 		m.pose.position.x = x_tubes[i];
 		m.pose.position.y = y_tubes[i];
+		m.pose.position.z = 0;
+		m.pose.orientation.x = 0;
+		m.pose.orientation.y = 0;
+		m.pose.orientation.z = 0;
+		m.pose.orientation.w = 1;
+		m.scale.x = tube_radius;
+		m.scale.y = tube_radius;
+		m.scale.z = 0.2;
+		m.color.r = 1.0;
+		m.color.b = 0.0;
+		m.color.g = 0.0;
+		m.color.a = 1.0;
 		real_marker_arr.markers.push_back(m);
 	}
 	pub_tubes.publish(real_marker_arr);
@@ -141,6 +156,7 @@ int main(int argc, char** argv)
 	nav_msgs::Path path;
 	path.header.frame_id = "world";
 	visualization_msgs::MarkerArray relative_marker_arr;
+	
 	
 	while(n.ok())
 	{	
@@ -183,19 +199,22 @@ int main(int argc, char** argv)
 		//Publish relative marker pose  //TODO add covariance noise
 		Vector2D robot_pos(dd.getX(), dd.getY());
 		Transform2D t(robot_pos, dd.getTheta());
+		Transform2D tinv = t.inv();
 		for(std::size_t i = 0; i < x_tubes.size(); ++i)
 		{
 			visualization_msgs::Marker m;
 			m.header.stamp = current_time; 
+			m.header.frame_id = "turtle";
 			m.ns = "relative";
+			m.id = i;
 			m.type = visualization_msgs::Marker::CYLINDER;
 			
 			Vector2D p_abs(x_tubes[i], y_tubes[i]);
-			Vector2D p_rel = t(p_abs);
+			Vector2D p_rel = tinv(p_abs);
 			double mag = magnitude(p_rel);
 			if (mag <= d_max_tubes)
 			{
-				m.action = visualization_msgs::Marker::ADD;
+				m.action = visualization_msgs::Marker::MODIFY;
 			}
 			else
 			{
@@ -203,9 +222,21 @@ int main(int argc, char** argv)
 			}
 			m.pose.position.x = p_rel.x;
 			m.pose.position.y = p_rel.y;
+			m.pose.position.z = 0;
+			m.pose.orientation.x = 0;
+			m.pose.orientation.y = 0;
+			m.pose.orientation.z = 0;
+			m.pose.orientation.w = 1;
+			m.scale.x = tube_radius;
+			m.scale.y = tube_radius;
+			m.scale.z = 0.2;
+			m.color.r = 1.0;
+			m.color.b = 0.0;
+			m.color.g = 0.0;
+			m.color.a = 1.0;
 			relative_marker_arr.markers.push_back(m);
 		}
-		pub_tubes.publish(relative_marker_arr);
+		pub_sensor.publish(relative_marker_arr);
 		
 		last_time = current_time;
 		r.sleep();
