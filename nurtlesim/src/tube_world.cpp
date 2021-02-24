@@ -13,6 +13,7 @@
 ///		y_tubes (std::vector<double>): vector containing y coordinates of the obstacle tubes
 ///		tube_radius (double): radius of the obstacle tubes
 ///		d_max_tubes (double): maximum distance beyond which tubes are not visible
+///		robot_radius (double): collision radius of the robot
 /// PUBLISHES:
 ///		visualization_marker_array (visualization_msgs/MarkerArray): true location of the tubes in the environment
 ///		real_path (nav_msgs/Path): trajectory of the robot
@@ -62,10 +63,14 @@ std::mt19937 & get_random()  // function from lecture notes
 void callback(const geometry_msgs::Twist::ConstPtr & msg)
 {
 	using namespace rigid2d;
+	// define distributions
 	static std::normal_distribution<> vx_gauss(0.0, vx_noise);
-	static std::normal_distribution<> w_gauss(0.0, w_noise);	
+	static std::normal_distribution<> w_gauss(0.0, w_noise);
+	// add noise to the linear twist
 	Vector2D v(msg -> linear.x + vx_gauss(get_random()), msg -> linear.y);
+	// add noise to the rotational twist
 	Twist2D tw(v, msg -> angular.z + w_gauss(get_random()));
+	// convert twist to wheel speeds
 	wv.l_vel = (dd.twist2WheelVel(tw)).l_vel;
 	wv.r_vel = (dd.twist2WheelVel(tw)).r_vel;
 }
@@ -76,14 +81,15 @@ int main(int argc, char** argv)
 	
 	ros::init(argc, argv, "tube_world");
 	ros::NodeHandle n;
+	// define publishers and subscribers
 	//ros::Publisher pub = n.advertise<sensor_msgs::JointState>("joint_states", 1000);
 	ros::Publisher pub_tubes = n.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 1000, true);
 	ros::Publisher pub_path = n.advertise<nav_msgs::Path>("real_path", 1000);
 	ros::Publisher pub_sensor = n.advertise<visualization_msgs::MarkerArray>("fake_sensor", 1000);
 	tf2_ros::TransformBroadcaster broadcaster;
-	
 	ros::Subscriber sub = n.subscribe("cmd_vel", 1000, callback);
 	
+	// define variables to store parameters and retrieve parameters
 	double wheel_base;
 	double wheel_radius;
 	std::string left_wheel_joint;
@@ -103,16 +109,24 @@ int main(int argc, char** argv)
 	double tube_radius = 0.01;
 	double d_max_tubes = 1.0;
 	double slip_max = 0.5;
+	double robot_radius = 0.1;
 	n.getParam("x_tubes", x_tubes);
 	n.getParam("y_tubes", y_tubes);
 	n.getParam("tube_var", tube_var);
 	n.getParam("tube_radius", tube_radius);
 	n.getParam("d_max_tubes", d_max_tubes);
 	n.getParam("slip_max", slip_max);
+	n.getParam("robot_radius", robot_radius);
+	
+	// critical distance for collision
+	double d_crit = tube_radius + robot_radius;
+	
+	// define gaussian distributions given ros parameters
 	std::normal_distribution<> xsense_gauss(0.0, tube_var[0]);
 	std::normal_distribution<> ysense_gauss(0.0, tube_var[1]);
 	std::uniform_real_distribution<> slip_unif(0, slip_max);
 	
+	// obtain matrices for x-y sensor noise bivariate Gaussian
 	arma::Mat<double> Q = { {tube_var[0], tube_var[2]},
 							{tube_var[2], tube_var[1]} };
 	arma::Mat<double> L = arma::chol(Q, "lower");
@@ -124,19 +138,83 @@ int main(int argc, char** argv)
 	auto current_time = ros::Time::now();
 	auto last_time = ros::Time::now();
 	
+	// define message to publish transformation between world frame and turtle frame
+	geometry_msgs::TransformStamped trans;
+	trans.header.frame_id = "world";
+	trans.child_frame_id = "turtle";
+	
+	// define message to publish path of turtle frame
+	nav_msgs::Path path;
+	path.header.frame_id = "world";
+	
+	// contains true position of the markers, expressed in terms of the world frame
 	visualization_msgs::MarkerArray real_marker_arr;
 	
 	for(std::size_t i = 0; i < x_tubes.size(); ++i)
 	{
-		visualization_msgs::Marker m;
+		visualization_msgs::Marker m;  // initialize marker to add to the array
 		m.header.stamp = current_time;
-		m.header.frame_id = "world";
+		m.header.frame_id = "world";  // relative to the world (fixed) frame
 		m.ns = "real";
-		m.id = i;
+		m.id = i;  // unique id under namespace "real"
 		m.type = visualization_msgs::Marker::CYLINDER;
 		m.action = visualization_msgs::Marker::ADD;
-		m.pose.position.x = x_tubes[i];
+		// assign x and y positions of the marker as specified by the ros parameter
+		m.pose.position.x = x_tubes[i]; 
 		m.pose.position.y = y_tubes[i];
+		m.pose.position.z = 0;
+		m.pose.orientation.x = 0;
+		m.pose.orientation.y = 0;
+		m.pose.orientation.z = 0;
+		m.pose.orientation.w = 1;
+		// scale rviz visualization with tube_radius
+		m.scale.x = tube_radius;
+		m.scale.y = tube_radius;
+		m.scale.z = 0.2;
+		// red marker, not transparent
+		m.color.r = 1.0;
+		m.color.b = 0.0;
+		m.color.g = 0.0;
+		m.color.a = 1.0;
+		real_marker_arr.markers.push_back(m);  // add marker to the array
+	}
+	pub_tubes.publish(real_marker_arr);  // publish once MarkerArray
+	
+	// contains position of the markers relative to the robot frame
+	visualization_msgs::MarkerArray relative_marker_arr;
+	// store robot xy position in a rigid transformation
+	Vector2D robot_pos(dd.getX(), dd.getY());
+	Transform2D t(robot_pos, dd.getTheta());
+	// find inverse of transformation
+	Transform2D tinv = t.inv();
+	for(std::size_t i = 0; i < x_tubes.size(); ++i)
+	{
+		visualization_msgs::Marker m;  // define new marker to add to the array
+		m.header.stamp = current_time; 
+		m.header.frame_id = "turtle";  // position of marker is relative to the robot frame
+		m.ns = "relative";
+		m.id = i;  // unique id in namespace "relative"
+		m.type = visualization_msgs::Marker::CYLINDER;
+		
+		Vector2D p_abs(x_tubes[i], y_tubes[i]);  // store position of the tube with respect to the world frame in a vector
+		// generate a vector of bivariate xy noise for tube relative position
+		double ux = xsense_gauss(get_random());
+		double uy = ysense_gauss(get_random());
+		Vector2D p_noise(L(0,0)*ux, L(1,0)*ux + L(1,1)*uy);
+		Vector2D p_rel = tinv(p_abs) + p_noise;  // find position of tubes in the robot frame and add noise
+		double mag = magnitude(p_rel);  // calculate sensed robot-tube distance
+		
+		// Check if distance to obstacle is above sensing range
+		if (mag <= d_max_tubes)
+		{
+			m.action = visualization_msgs::Marker::MODIFY;
+		}
+		else
+		{
+			m.action = visualization_msgs::Marker::DELETE;
+		}
+		m.pose.position.x = p_rel.x;
+		m.pose.position.y = p_rel.y;
 		m.pose.position.z = 0;
 		m.pose.orientation.x = 0;
 		m.pose.orientation.y = 0;
@@ -149,31 +227,50 @@ int main(int argc, char** argv)
 		m.color.b = 0.0;
 		m.color.g = 0.0;
 		m.color.a = 1.0;
-		real_marker_arr.markers.push_back(m);
+		relative_marker_arr.markers.push_back(m);
 	}
-	pub_tubes.publish(real_marker_arr);
-	
-	geometry_msgs::TransformStamped trans;
-	trans.header.frame_id = "world";
-	trans.child_frame_id = "turtle";
-	
-	nav_msgs::Path path;
-	path.header.frame_id = "world";
-	visualization_msgs::MarkerArray relative_marker_arr;
-	
-	
+	pub_sensor.publish(relative_marker_arr);  // publish relative obstacle pose markers
+
 	while(n.ok())
 	{	
 		ros::spinOnce();
 		current_time = ros::Time::now(); 
 		double dt = (current_time - last_time).toSec();
+		// update pose of the robot given wheel velocities
 		dd.updatePose(dd.getLWheelPhi()+dt*wv.l_vel, dd.getRWheelPhi()+dt*wv.r_vel, slip_unif(get_random()), slip_unif(get_random()));
+		// check for collisions
+		for(std::size_t i = 0; i < x_tubes.size(); ++i)
+		{	
+			// absolute position (wrt world frame) of the obstacle
+			Vector2D p_abs(x_tubes[i], y_tubes[i]);
+			// absolute position (wrt world frame) of the robot
+			Vector2D robot_pos(dd.getX(), dd.getY());
+			// position vector difference
+			Vector2D p_diff = (p_abs - robot_pos);
+			// magnitude of current distance
+			double d_current = magnitude(p_diff);
+			
+			if (d_current < d_crit)
+			{
+				// normalize position vector difference
+				p_diff.normalize();
+				// change in robot position commanded			
+				Vector2D dp = -(d_crit - d_current)*p_diff;
+				// edit robot pos
+				robot_pos.x += dp.x;
+				robot_pos.y += dp.y;
+				// construct the new robot pose (heading angle does not change)
+				RobotPose rp{dd.getTheta(), robot_pos.x, robot_pos.y};
+				// change the robot pose
+				dd.setPose(rp);
+			}
+		}
 		//js.header.stamp = current_time;
 		//js.position = {dd.getLWheelPhi(), dd.getRWheelPhi()};
 		//js.velocity = {wv.l_vel, wv.r_vel};
 		//pub.publish(js);
 		
-		// Publish frame transformation
+		// Publish frame transformation given new pose of the robot
 		trans.header.stamp = current_time;
 		trans.transform.translation.x = dd.getX();
 		trans.transform.translation.y = dd.getY();
@@ -186,7 +283,7 @@ int main(int argc, char** argv)
 		trans.transform.rotation.w = q.w();
 		broadcaster.sendTransform(trans);	
 		
-		//Publish path
+		//Publish path given new pose of the robot
 		path.header.stamp = current_time;
 		geometry_msgs::PoseStamped pos;
 		pos.header.stamp = current_time;
@@ -200,25 +297,29 @@ int main(int argc, char** argv)
 		path.poses.push_back(pos);
 		pub_path.publish(path);
 		
-		//Publish relative marker pose  //TODO add covariance noise
+		// store robot xy position in a rigid transformation
 		Vector2D robot_pos(dd.getX(), dd.getY());
 		Transform2D t(robot_pos, dd.getTheta());
+		// find inverse of transformation
 		Transform2D tinv = t.inv();
 		for(std::size_t i = 0; i < x_tubes.size(); ++i)
 		{
-			visualization_msgs::Marker m;
+			visualization_msgs::Marker m;  // define new marker to add to the array
 			m.header.stamp = current_time; 
-			m.header.frame_id = "turtle";
+			m.header.frame_id = "turtle";  // position of marker is relative to the robot frame
 			m.ns = "relative";
-			m.id = i;
+			m.id = i;  // unique id in namespace "relative"
 			m.type = visualization_msgs::Marker::CYLINDER;
 			
-			Vector2D p_abs(x_tubes[i], y_tubes[i]);
+			Vector2D p_abs(x_tubes[i], y_tubes[i]);  // store position of the tube with respect to the world frame in a vector
+			// generate a vector of bivariate xy noise for tube relative position
 			double ux = xsense_gauss(get_random());
 			double uy = ysense_gauss(get_random());
 			Vector2D p_noise(L(0,0)*ux, L(1,0)*ux + L(1,1)*uy);
-			Vector2D p_rel = tinv(p_abs) + p_noise;
-			double mag = magnitude(p_rel);
+			Vector2D p_rel = tinv(p_abs) + p_noise;  // find position of tubes in the robot frame and add noise
+			double mag = magnitude(p_rel);  // calculate sensed robot-tube distance
+			
+			// Check if distance to obstacle is above sensing range
 			if (mag <= d_max_tubes)
 			{
 				m.action = visualization_msgs::Marker::MODIFY;
@@ -243,7 +344,7 @@ int main(int argc, char** argv)
 			m.color.a = 1.0;
 			relative_marker_arr.markers.push_back(m);
 		}
-		pub_sensor.publish(relative_marker_arr);
+		pub_sensor.publish(relative_marker_arr);  // publish relative obstacle pose markers
 		
 		last_time = current_time;
 		r.sleep();
