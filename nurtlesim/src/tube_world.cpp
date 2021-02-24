@@ -139,6 +139,7 @@ int main(int argc, char** argv)
 	trans.child_frame_id = "turtle";
 	
 	nav_msgs::Path path;
+	path.header.frame_id = "world";
 	visualization_msgs::MarkerArray relative_marker_arr;
 	
 	while(n.ok())
