@@ -65,6 +65,10 @@ namespace rigid2d
 		/// \param r_slip - fraction of the right wheel rotation subject to slip
 		void updatePose(double l_wheel_phi_new, double r_wheel_phi_new, double l_slip=0.0, double r_slip=0.0);
 		
+		/// \brief translate current pose in x,y,theta directions
+		/// \param q - the pose translation to apply
+		void translatePose(RobotPose q);
+		
 		/// \brief update diff drive pose based on commanded values
 		/// \param q - new commanded pose of the robot
 		void setPose(RobotPose q);

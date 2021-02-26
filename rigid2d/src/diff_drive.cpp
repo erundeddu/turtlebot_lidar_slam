@@ -51,8 +51,17 @@ namespace rigid2d
 		Twist2D d_q = t_a.change_twist_frame(d_q_b);
 		// Update pose
 		m_q.theta += d_q.getW();
+		normalize_angle(m_q.theta);
 		m_q.x += d_q.getVx();
 		m_q.y += d_q.getVy();
+	}
+	
+	void DiffDrive::translatePose(RobotPose q)
+	{
+		m_q.x += q.x;
+		m_q.y += q.y;
+		m_q.theta += q.theta; 
+		normalize_angle(m_q.theta);
 	}
 	
 	void DiffDrive::setPose(RobotPose q)

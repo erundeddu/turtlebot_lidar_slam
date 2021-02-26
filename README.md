@@ -8,3 +8,4 @@ This repository consists of several ROS packages
 - rigid2d - contains functions for performing 2D rigid body transformations, diff-drive robot definition, and ROS nodes for odometry and diff-drive robot kinematic simulation
 - nuturtle\_robot - contains code to interact with the turtlebot hardware and run nodes on the turtlebot from a computer
 - nurtlesim - simulation of robot kinematics and of landmark detection through a sensor
+- nuslam - implements Feature-Based Kalman Filter SLAM and visualized estimated robot trajectory in rviz

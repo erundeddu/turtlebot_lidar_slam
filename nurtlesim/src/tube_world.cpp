@@ -18,6 +18,7 @@
 ///		visualization_marker_array (visualization_msgs/MarkerArray): true location of the tubes in the environment
 ///		real_path (nav_msgs/Path): trajectory of the robot
 ///		fake_sensor (visualization_msgs/MarkerArray): measured position of the tubes relative to the robot
+///     joint_states (sensor_msgs/JointState): angles and angular velocities of left and right robot wheels
 /// SUBSCRIBES:
 ///     cmd_vel (geometry_msgs/Twist): input twist that causes motion of robot wheels
 
@@ -82,7 +83,7 @@ int main(int argc, char** argv)
 	ros::init(argc, argv, "tube_world");
 	ros::NodeHandle n;
 	// define publishers and subscribers
-	//ros::Publisher pub = n.advertise<sensor_msgs::JointState>("joint_states", 1000);
+	ros::Publisher pub = n.advertise<sensor_msgs::JointState>("joint_states", 1000);
 	ros::Publisher pub_tubes = n.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 1000, true);
 	ros::Publisher pub_path = n.advertise<nav_msgs::Path>("real_path", 1000);
 	ros::Publisher pub_sensor = n.advertise<visualization_msgs::MarkerArray>("fake_sensor", 1000);
@@ -131,9 +132,9 @@ int main(int argc, char** argv)
 							{tube_var[2], tube_var[1]} };
 	arma::Mat<double> L = arma::chol(Q, "lower");
 	
-	ros::Rate r(10);
-	//sensor_msgs::JointState js;
-	//js.name = {left_wheel_joint, right_wheel_joint};
+	ros::Rate r(100);
+	sensor_msgs::JointState js;
+	js.name = {left_wheel_joint, right_wheel_joint};
 	
 	auto current_time = ros::Time::now();
 	auto last_time = ros::Time::now();
@@ -231,6 +232,7 @@ int main(int argc, char** argv)
 	}
 	pub_sensor.publish(relative_marker_arr);  // publish relative obstacle pose markers
 
+	int count = 0;
 	while(n.ok())
 	{	
 		ros::spinOnce();
@@ -265,10 +267,10 @@ int main(int argc, char** argv)
 				dd.setPose(rp);
 			}
 		}
-		//js.header.stamp = current_time;
-		//js.position = {dd.getLWheelPhi(), dd.getRWheelPhi()};
-		//js.velocity = {wv.l_vel, wv.r_vel};
-		//pub.publish(js);
+		js.header.stamp = current_time;
+		js.position = {dd.getLWheelPhi(), dd.getRWheelPhi()};
+		js.velocity = {wv.l_vel, wv.r_vel};
+		pub.publish(js);
 		
 		// Publish frame transformation given new pose of the robot
 		trans.header.stamp = current_time;
@@ -297,55 +299,62 @@ int main(int argc, char** argv)
 		path.poses.push_back(pos);
 		pub_path.publish(path);
 		
-		// store robot xy position in a rigid transformation
-		Vector2D robot_pos(dd.getX(), dd.getY());
-		Transform2D t(robot_pos, dd.getTheta());
-		// find inverse of transformation
-		Transform2D tinv = t.inv();
-		for(std::size_t i = 0; i < x_tubes.size(); ++i)
+		if (count == 10)
 		{
-			visualization_msgs::Marker m;  // define new marker to add to the array
-			m.header.stamp = current_time; 
-			m.header.frame_id = "turtle";  // position of marker is relative to the robot frame
-			m.ns = "relative";
-			m.id = i;  // unique id in namespace "relative"
-			m.type = visualization_msgs::Marker::CYLINDER;
-			
-			Vector2D p_abs(x_tubes[i], y_tubes[i]);  // store position of the tube with respect to the world frame in a vector
-			// generate a vector of bivariate xy noise for tube relative position
-			double ux = xsense_gauss(get_random());
-			double uy = ysense_gauss(get_random());
-			Vector2D p_noise(L(0,0)*ux, L(1,0)*ux + L(1,1)*uy);
-			Vector2D p_rel = tinv(p_abs) + p_noise;  // find position of tubes in the robot frame and add noise
-			double mag = magnitude(p_rel);  // calculate sensed robot-tube distance
-			
-			// Check if distance to obstacle is above sensing range
-			if (mag <= d_max_tubes)
+			// store robot xy position in a rigid transformation
+			Vector2D robot_pos(dd.getX(), dd.getY());
+			Transform2D t(robot_pos, dd.getTheta());
+			// find inverse of transformation
+			Transform2D tinv = t.inv();
+			for(std::size_t i = 0; i < x_tubes.size(); ++i)
 			{
-				m.action = visualization_msgs::Marker::MODIFY;
+				visualization_msgs::Marker m;  // define new marker to add to the array
+				m.header.stamp = current_time; 
+				m.header.frame_id = "turtle";  // position of marker is relative to the robot frame
+				m.ns = "relative";
+				m.id = i;  // unique id in namespace "relative"
+				m.type = visualization_msgs::Marker::CYLINDER;
+				
+				Vector2D p_abs(x_tubes[i], y_tubes[i]);  // store position of the tube with respect to the world frame in a vector
+				// generate a vector of bivariate xy noise for tube relative position
+				double ux = xsense_gauss(get_random());
+				double uy = ysense_gauss(get_random());
+				Vector2D p_noise(L(0,0)*ux, L(1,0)*ux + L(1,1)*uy);
+				Vector2D p_rel = tinv(p_abs) + p_noise;  // find position of tubes in the robot frame and add noise
+				double mag = magnitude(p_rel);  // calculate sensed robot-tube distance
+				
+				// Check if distance to obstacle is above sensing range
+				if (mag <= d_max_tubes)
+				{
+					m.action = visualization_msgs::Marker::MODIFY;
+				}
+				else
+				{
+					m.action = visualization_msgs::Marker::DELETE;
+				}
+				m.pose.position.x = p_rel.x;
+				m.pose.position.y = p_rel.y;
+				m.pose.position.z = 0;
+				m.pose.orientation.x = 0;
+				m.pose.orientation.y = 0;
+				m.pose.orientation.z = 0;
+				m.pose.orientation.w = 1;
+				m.scale.x = tube_radius;
+				m.scale.y = tube_radius;
+				m.scale.z = 0.2;
+				m.color.r = 1.0;
+				m.color.b = 0.0;
+				m.color.g = 0.0;
+				m.color.a = 1.0;
+				relative_marker_arr.markers.push_back(m);
 			}
-			else
-			{
-				m.action = visualization_msgs::Marker::DELETE;
-			}
-			m.pose.position.x = p_rel.x;
-			m.pose.position.y = p_rel.y;
-			m.pose.position.z = 0;
-			m.pose.orientation.x = 0;
-			m.pose.orientation.y = 0;
-			m.pose.orientation.z = 0;
-			m.pose.orientation.w = 1;
-			m.scale.x = tube_radius;
-			m.scale.y = tube_radius;
-			m.scale.z = 0.2;
-			m.color.r = 1.0;
-			m.color.b = 0.0;
-			m.color.g = 0.0;
-			m.color.a = 1.0;
-			relative_marker_arr.markers.push_back(m);
+			pub_sensor.publish(relative_marker_arr);  // publish relative obstacle pose markers
+			count = 0;
 		}
-		pub_sensor.publish(relative_marker_arr);  // publish relative obstacle pose markers
-		
+		else
+		{
+			++count;
+		}
 		last_time = current_time;
 		r.sleep();
 	}
