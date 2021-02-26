@@ -40,6 +40,7 @@
 #include <vector>
 #include "rigid2d/rigid2d.hpp"
 #include "rigid2d/diff_drive.hpp"
+#include "nurtlesim/multivariate.hpp"
 
 static rigid2d::DiffDrive dd;	
 static rigid2d::WheelVel wv;
@@ -75,6 +76,8 @@ void callback(const geometry_msgs::Twist::ConstPtr & msg)
 	wv.l_vel = (dd.twist2WheelVel(tw)).l_vel;
 	wv.r_vel = (dd.twist2WheelVel(tw)).r_vel;
 }
+
+
 
 int main(int argc, char** argv)
 {
@@ -123,14 +126,12 @@ int main(int argc, char** argv)
 	double d_crit = tube_radius + robot_radius;
 	
 	// define gaussian distributions given ros parameters
-	std::normal_distribution<> xsense_gauss(0.0, tube_var[0]);
-	std::normal_distribution<> ysense_gauss(0.0, tube_var[1]);
 	std::uniform_real_distribution<> slip_unif(0, slip_max);
 	
-	// obtain matrices for x-y sensor noise bivariate Gaussian
+	// obtain matrix for x-y sensor noise bivariate Gaussian
 	arma::Mat<double> Q = { {tube_var[0], tube_var[2]},
 							{tube_var[2], tube_var[1]} };
-	arma::Mat<double> L = arma::chol(Q, "lower");
+	Multivar mv_xy(Q);
 	
 	ros::Rate r(100);
 	sensor_msgs::JointState js;
@@ -198,10 +199,10 @@ int main(int argc, char** argv)
 		m.type = visualization_msgs::Marker::CYLINDER;
 		
 		Vector2D p_abs(x_tubes[i], y_tubes[i]);  // store position of the tube with respect to the world frame in a vector
-		// generate a vector of bivariate xy noise for tube relative position
-		double ux = xsense_gauss(get_random());
-		double uy = ysense_gauss(get_random());
-		Vector2D p_noise(L(0,0)*ux, L(1,0)*ux + L(1,1)*uy);
+		
+		std::vector<double> noise_vec = mv_xy.draw();
+		Vector2D p_noise((double)noise_vec[0], (double)noise_vec[1]);
+		
 		Vector2D p_rel = tinv(p_abs) + p_noise;  // find position of tubes in the robot frame and add noise
 		double mag = magnitude(p_rel);  // calculate sensed robot-tube distance
 		
@@ -316,10 +317,9 @@ int main(int argc, char** argv)
 				m.type = visualization_msgs::Marker::CYLINDER;
 				
 				Vector2D p_abs(x_tubes[i], y_tubes[i]);  // store position of the tube with respect to the world frame in a vector
-				// generate a vector of bivariate xy noise for tube relative position
-				double ux = xsense_gauss(get_random());
-				double uy = ysense_gauss(get_random());
-				Vector2D p_noise(L(0,0)*ux, L(1,0)*ux + L(1,1)*uy);
+				std::vector<double> noise_vec = mv_xy.draw();
+				Vector2D p_noise((double)noise_vec[0], (double)noise_vec[1]);
+				
 				Vector2D p_rel = tinv(p_abs) + p_noise;  // find position of tubes in the robot frame and add noise
 				double mag = magnitude(p_rel);  // calculate sensed robot-tube distance
 				

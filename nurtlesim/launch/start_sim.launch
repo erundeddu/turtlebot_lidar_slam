@@ -8,7 +8,7 @@
 	<rosparam param="x_tubes">[2, -2, 0.5]</rosparam>
 	<rosparam param="y_tubes">[2, 2.5, 0.5]</rosparam>
 	<!-- "tube_var" is ordered as [sigma_x, sigma_y, sigma_xy] -->
-	<rosparam param="tube_var">[0.02, 0.02, 0.005]</rosparam>
+	<rosparam param="tube_var">[0.1, 0.1, 0.05]</rosparam>
 	<param name="tube_radius" value="0.0762"/>
 	<param name="d_max_tubes" value="4.0"/>
 	<param name="robot_radius" value ="0.105"/>  

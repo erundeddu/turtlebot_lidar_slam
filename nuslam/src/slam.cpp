@@ -27,6 +27,7 @@
 #include <vector>
 #include "rigid2d/diff_drive.hpp"
 #include "rigid2d/set_pose.h"
+#include "nurtlesim/multivariate.hpp"
 
 static rigid2d::DiffDrive dd;
 static nav_msgs::Odometry odom;
@@ -66,7 +67,7 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	}
 
 	dd.updatePose(l_phi_wheel_new, r_phi_wheel_new);
-	static std::normal_distribution<> w_gauss(0.0, Q);
+	static std::normal_distribution<> w_gauss(0.0, Q);  //FIXME
 	//get multivariate Q
 	// draw from Q
 	// add to dd
@@ -125,7 +126,7 @@ int main(int argc, char** argv)
 {
 	using namespace rigid2d;
 	
-	ros::init(argc, argv, "odometer");
+	ros::init(argc, argv, "slam");
 	ros::NodeHandle n;
 	ros::Subscriber sub = n.subscribe("joint_states", 1000, callback);
 	
