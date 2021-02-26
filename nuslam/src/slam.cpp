@@ -35,6 +35,7 @@ static geometry_msgs::TransformStamped odom_trans;
 static bool started(false);
 static std::vector<double> q_cov; 
 
+
 /// \brief Updates internal odometry state, publishes a ROS odometry message, broadcast the transform between odometry and body frame on tf
 /// \param msg - a pointer to the sensor_msg/JointState message with angles and angular velocities of the robot wheels
 void callback(const sensor_msgs::JointState::ConstPtr & msg)
@@ -67,11 +68,16 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	}
 
 	dd.updatePose(l_phi_wheel_new, r_phi_wheel_new);
-	static std::normal_distribution<> w_gauss(0.0, Q);  //FIXME
-	//get multivariate Q
-	// draw from Q
-	// add to dd
-	
+	static arma::Mat<double> Q = {	{q_cov[0], q_cov[3], q_cov[4]},
+								{q_cov[3], q_cov[1], q_cov[5]},
+								{q_cov[4], q_cov[5], q_cov[2]}};
+	static Multivar mv_thetaxy(Q);
+	std::vector<double> w_vec = mv_thetaxy.draw();
+	RobotPose w;
+	w.theta = w_vec[0];
+	w.x = w_vec[1];
+	w.y = w_vec[2];
+	dd.translatePose(w);  // add process noise wt ~ N(0,Q)
 
 	// start referencing http://wiki.ros.org/navigation/Tutorials/RobotSetup/Odom here (Access: 2/1/2021)	
 	odom.header.stamp = current_time;
@@ -79,7 +85,6 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	odom.pose.pose.position.y = dd.getY();
 	odom.pose.pose.position.z = 0.0;
 	
-	//geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(dd.getTheta());
 	tf2::Quaternion q;
 	q.setRPY(0, 0, dd.getTheta());
 	

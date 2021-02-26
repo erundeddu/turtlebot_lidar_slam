@@ -5,7 +5,7 @@
 	<param name="odom_frame_id" value="odom"/>
 	<param name="body_frame_id" value="base_footprint"/>
 	
-	<!-- q_cov is ordered as [sigma_x, sigma_y, sigma_theta, sigma_xy, sigma_xtheta, sigma_ytheta] -->
+	<!-- q_cov is ordered as [sigma_theta, sigma_x, sigma_y, sigma_xtheta, sigma_ytheta, sigma_xy] -->
 	<rosparam param="q_cov">[0.1, 0.1, 0.1, 0.05, 0.01, 0.01]</rosparam>
 	<rosparam command="load" file="$(find nuturtle_description)/config/diff_params.yaml" />
 	
