@@ -158,7 +158,7 @@ int main(int argc, char** argv)
 		m.header.stamp = current_time;
 		m.header.frame_id = "world";  // relative to the world (fixed) frame
 		m.ns = "real";
-		m.id = i;  // unique id under namespace "real"
+		m.id = i+1;  // unique id under namespace "real"
 		m.type = visualization_msgs::Marker::CYLINDER;
 		m.action = visualization_msgs::Marker::ADD;
 		// assign x and y positions of the marker as specified by the ros parameter
@@ -195,7 +195,7 @@ int main(int argc, char** argv)
 		m.header.stamp = current_time; 
 		m.header.frame_id = "turtle";  // position of marker is relative to the robot frame
 		m.ns = "relative";
-		m.id = i;  // unique id in namespace "relative"
+		m.id = i+1;  // unique id in namespace "relative"
 		m.type = visualization_msgs::Marker::CYLINDER;
 		
 		Vector2D p_abs(x_tubes[i], y_tubes[i]);  // store position of the tube with respect to the world frame in a vector
@@ -313,7 +313,7 @@ int main(int argc, char** argv)
 				m.header.stamp = current_time; 
 				m.header.frame_id = "turtle";  // position of marker is relative to the robot frame
 				m.ns = "relative";
-				m.id = i;  // unique id in namespace "relative"
+				m.id = i+1;  // unique id in namespace "relative"
 				m.type = visualization_msgs::Marker::CYLINDER;
 				
 				Vector2D p_abs(x_tubes[i], y_tubes[i]);  // store position of the tube with respect to the world frame in a vector

@@ -34,6 +34,7 @@ static nav_msgs::Odometry odom;
 static geometry_msgs::TransformStamped odom_trans;
 static bool started(false);
 static std::vector<double> q_cov; 
+static std::vector<double> r_cov;
 int n = 3;  //FIXME how is this initialized?
 
 
@@ -68,6 +69,7 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 		odom.twist.twist.angular.z = 0;
 	}
 	
+	static arma::Mat<double> = arma::zeros(2*n,1);
 	arma::Mat<double> A = nuslam::compute_A_mat(dd, l_phi_wheel_new, r_phi_wheel_new, n);
 	dd.updatePose(l_phi_wheel_new, r_phi_wheel_new);  //update estimate of the model (odometry only)
 	static arma::Mat<double> Q = {	{q_cov[0], q_cov[3], q_cov[4]},
@@ -75,6 +77,9 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 									{q_cov[4], q_cov[5], q_cov[2]}};
 									
 	static arma::Mat<double> S = {arma::join_cols(arma::join_rows(arma::zeros(3,3), arma::zeros(3,2*n)), arma::join_rows(arma::zeros(3,2*n), 10000*arma::eye(2*n,2*n))}  // initialize sigma matrix (sigma_0)
+	
+	static arma::Mat<double> R = {	{r_cov[0], r_cov[2]},
+									{r_cov[1], r_cov[2]}};
 	
 	//static Multivar mv_thetaxy(Q);  //FIXME not needed
 	//std::vector<double> w_vec = mv_thetaxy.draw();

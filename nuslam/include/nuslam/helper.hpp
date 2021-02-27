@@ -7,8 +7,8 @@
 #include "rigid2d/diff_drive.hpp"
 #include <armadillo>
 
-namespace nuslam {
-
+namespace nuslam 
+{
 	/// \brief compute the matrix A (derivative of state update with respect to the state)
 	/// \param d - the diff drive robot at time t-1
 	/// \param l_phi_wheel_new - the angle of the robot left wheel at time t
@@ -16,6 +16,13 @@ namespace nuslam {
 	/// \param n - the number of landmarks
 	/// \return the matrix of A as an armadillo matrix
 	arma::Mat<double> compute_A_mat(rigid2d::DiffDrive & d, double l_phi_wheel_new, double r_phi_wheel_new, int n);
+	
+	/// \brief compute the matrix H_j
+	/// \param dx - estimated relative x distance
+	/// \param dy - estimated relative y distance
+	/// \param n - the number of landmarks
+	/// \param j - the current landmark index (1 - n)
+	arma::Mat<double> compute_Hj_mat(double dx, double dy, int n, int j);
 }
 
 #endif

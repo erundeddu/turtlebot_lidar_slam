@@ -7,6 +7,8 @@
 	
 	<!-- q_cov is ordered as [sigma_theta, sigma_x, sigma_y, sigma_xtheta, sigma_ytheta, sigma_xy] -->
 	<rosparam param="q_cov">[0.1, 0.1, 0.1, 0.05, 0.01, 0.01]</rosparam>
+	<!-- q_cov is ordered as [sigma_x, sigma_y, sigma_xy] -->
+	<rosparam param="r_cov">[0.1, 0.1, 0.05]</rosparam>
 	<rosparam command="load" file="$(find nuturtle_description)/config/diff_params.yaml" />
 	
 	<param name="robot_description" command="$(find xacro)/xacro $(find nuturtle_description)/urdf/turtlebot3_burger.urdf.xacro" />
