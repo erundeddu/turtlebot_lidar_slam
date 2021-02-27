@@ -34,6 +34,7 @@ static nav_msgs::Odometry odom;
 static geometry_msgs::TransformStamped odom_trans;
 static bool started(false);
 static std::vector<double> q_cov; 
+int n = 3;  //FIXME how is this initialized?
 
 
 /// \brief Updates internal odometry state, publishes a ROS odometry message, broadcast the transform between odometry and body frame on tf
@@ -66,18 +67,27 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 		odom.twist.twist.linear.y = 0;
 		odom.twist.twist.angular.z = 0;
 	}
-
-	dd.updatePose(l_phi_wheel_new, r_phi_wheel_new);
+	
+	arma::Mat<double> A = nuslam::compute_A_mat(dd, l_phi_wheel_new, r_phi_wheel_new, n);
+	dd.updatePose(l_phi_wheel_new, r_phi_wheel_new);  //update estimate of the model (odometry only)
 	static arma::Mat<double> Q = {	{q_cov[0], q_cov[3], q_cov[4]},
-								{q_cov[3], q_cov[1], q_cov[5]},
-								{q_cov[4], q_cov[5], q_cov[2]}};
-	static Multivar mv_thetaxy(Q);
-	std::vector<double> w_vec = mv_thetaxy.draw();
-	RobotPose w;
-	w.theta = w_vec[0];
-	w.x = w_vec[1];
-	w.y = w_vec[2];
-	dd.translatePose(w);  // add process noise wt ~ N(0,Q)
+									{q_cov[3], q_cov[1], q_cov[5]},
+									{q_cov[4], q_cov[5], q_cov[2]}};
+									
+	static arma::Mat<double> S = {arma::join_cols(arma::join_rows(arma::zeros(3,3), arma::zeros(3,2*n)), arma::join_rows(arma::zeros(3,2*n), 10000*arma::eye(2*n,2*n))}  // initialize sigma matrix (sigma_0)
+	
+	//static Multivar mv_thetaxy(Q);  //FIXME not needed
+	//std::vector<double> w_vec = mv_thetaxy.draw();
+	//RobotPose w;
+	//w.theta = w_vec[0];
+	//w.x = w_vec[1];
+	//w.y = w_vec[2];
+	//dd.translatePose(w);  // add process noise wt ~ N(0,Q)
+	
+	arma::Mat<double> Q_bar = arma::join_cols(arma::join_rows(Q, arma::zeros(3,2*n)), arma::join_rows(arma::zeros(2*n,3), arma::zeros(2*n,2*n)));
+	
+	S = A*S*trans(A) + Q_bar;  // propagate uncertainty
+	
 
 	// start referencing http://wiki.ros.org/navigation/Tutorials/RobotSetup/Odom here (Access: 2/1/2021)	
 	odom.header.stamp = current_time;
