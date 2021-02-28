@@ -9,10 +9,12 @@
 ///		odom_frame_id (string): the name of the odometry tf frame
 ///		body_frame_id (string): the name of the body tf frame
 ///		q_cov (std::vector<double>): covariance matrix for odometry process noise
+///		r_cov (std::vector<double>): covariance matrix for sensor noise
 /// PUBLISHES:
 ///     odom (nav_msgs/Odometry): robot pose in the odom_frame_id frame, robot body velocity in body_frame_id
 /// SUBSCRIBES:
 ///     joint_states (sensor_msgs/JointState): angles and angular velocities of left and right robot wheels
+///	    
 /// SERVICES:
 ///		set_pose (rigid2d/set_pose): provides a new pose to change where the robot think it is
 
@@ -22,12 +24,15 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/JointState.h>
+#include <visualization_msgs/MarkerArray.h>
+#include <visualization_msgs/Marker.h>
 #include <string>
 #include <random>
 #include <vector>
+#include <queue>
 #include "rigid2d/diff_drive.hpp"
 #include "rigid2d/set_pose.h"
-#include "nurtlesim/multivariate.hpp"
+#include "nuslam/helper.hpp"
 
 static rigid2d::DiffDrive dd;
 static nav_msgs::Odometry odom;
@@ -35,14 +40,16 @@ static geometry_msgs::TransformStamped odom_trans;
 static bool started(false);
 static std::vector<double> q_cov; 
 static std::vector<double> r_cov;
-int n = 3;  //FIXME how is this initialized?
+static std::queue<nuslam::Landmark> qe;
+int n = 10;  // maximum number of landmarks to track
 
 
-/// \brief Updates internal odometry state, publishes a ROS odometry message, broadcast the transform between odometry and body frame on tf
+/// \brief Updates internal odometry state, publishes a ROS odometry message, broadcast the transform between odometry and body frame on tf //TODO
 /// \param msg - a pointer to the sensor_msg/JointState message with angles and angular velocities of the robot wheels
 void callback(const sensor_msgs::JointState::ConstPtr & msg)
 {
 	using namespace rigid2d;
+	using namespace nuslam;
 	
 	static ros::NodeHandle nh;
 	static tf2_ros::TransformBroadcaster broadcaster;
@@ -69,29 +76,57 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 		odom.twist.twist.angular.z = 0;
 	}
 	
-	static arma::Mat<double> = arma::zeros(2*n,1);
-	arma::Mat<double> A = nuslam::compute_A_mat(dd, l_phi_wheel_new, r_phi_wheel_new, n);
+	//FIXME document and order these initializations
+	static arma::Mat<double> M = arma::zeros(2*n,1);
+	arma::Mat<double> A = compute_A_mat(dd, l_phi_wheel_new, r_phi_wheel_new, n);
 	dd.updatePose(l_phi_wheel_new, r_phi_wheel_new);  //update estimate of the model (odometry only)
 	static arma::Mat<double> Q = {	{q_cov[0], q_cov[3], q_cov[4]},
 									{q_cov[3], q_cov[1], q_cov[5]},
 									{q_cov[4], q_cov[5], q_cov[2]}};
 									
-	static arma::Mat<double> S = {arma::join_cols(arma::join_rows(arma::zeros(3,3), arma::zeros(3,2*n)), arma::join_rows(arma::zeros(3,2*n), 10000*arma::eye(2*n,2*n))}  // initialize sigma matrix (sigma_0)
+	static arma::Mat<double> S = {arma::join_cols(arma::join_rows(arma::zeros(3,3), arma::zeros(3,2*n)), arma::join_rows(arma::zeros(3,2*n), 10000*arma::eye(2*n,2*n)))};  // initialize sigma matrix (sigma_0)
 	
 	static arma::Mat<double> R = {	{r_cov[0], r_cov[2]},
 									{r_cov[1], r_cov[2]}};
-	
-	//static Multivar mv_thetaxy(Q);  //FIXME not needed
-	//std::vector<double> w_vec = mv_thetaxy.draw();
-	//RobotPose w;
-	//w.theta = w_vec[0];
-	//w.x = w_vec[1];
-	//w.y = w_vec[2];
-	//dd.translatePose(w);  // add process noise wt ~ N(0,Q)
-	
+									
+	static std::vector<int> is_init;
+	for (int i=0; i < n; ++i)
+	{
+		is_init.push_back(0);
+	}
+		
 	arma::Mat<double> Q_bar = arma::join_cols(arma::join_rows(Q, arma::zeros(3,2*n)), arma::join_rows(arma::zeros(2*n,3), arma::zeros(2*n,2*n)));
 	
 	S = A*S*trans(A) + Q_bar;  // propagate uncertainty
+	
+	while (qe.size() != 0)
+	{
+		Landmark lm = qe.front();
+		qe.pop();
+		if (!is_init[lm.id-1])  // landmark id's start from 1
+		{
+			initialize_landmark(dd, lm, M);
+			is_init[lm.id-1] = 1;
+		}
+		// compute the theoretical measurement
+		arma::Col<double> zh = compute_meas(dd, M, lm.id);
+		// compute the kalman gain
+		double dx = M(2*(lm.id-1),0) - dd.getX();
+		double dy = M(2*(lm.id-1)+1,0) - dd.getY();
+		arma::Mat<double> H = compute_Hj_mat(dx, dy, n, lm.id);
+		arma::Mat<double> K = S*H.t()*arma::inv(H*S*H.t()+R);
+		// compute the posterior state update
+		arma::Col<double> z = {lm.r, lm.phi};
+		arma::Col<double> q = {dd.getTheta(), dd.getX(), dd.getY()};
+		arma::Col<double> state = arma::join_cols(q, M);
+		state += K*(z-zh);
+		// update internal variables
+		RobotPose rp_new{state(0,0), state(1,0), state(2,0)};
+		dd.setPose(rp_new);
+		M = state.rows(3,M.n_rows-1);
+		// compute the posterior covariance
+		S = (arma::eye(size(S)) - K*H)*S;
+	}
 	
 
 	// start referencing http://wiki.ros.org/navigation/Tutorials/RobotSetup/Odom here (Access: 2/1/2021)	
@@ -126,6 +161,25 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	// end referencing http://wiki.ros.org/navigation/Tutorials/RobotSetup/Odom here (Access: 2/1/2021)
 }
 
+
+//TODO comment
+void markers_callback(const visualization_msgs::MarkerArray::ConstPtr & msg)
+{
+	using namespace nuslam;
+	using namespace rigid2d;
+	int num_m = msg -> markers.size();
+	for (int i = 0; i < num_m; ++i)
+	{
+		if (msg -> markers[i].action == 0)
+		{
+			Vector2D v(msg -> markers[i].pose.position.x, msg -> markers[i].pose.position.y);
+			Landmark lm(magnitude(v), angle(v), msg -> markers[i].id);
+			qe.push(lm);
+		}
+	}
+}
+
+
 /// \brief following a set_pose service, reset location of odometry to match requested configuration
 /// \param req - service request package of type rigid2d::set_pose::Request (containing robot pose)
 /// \param res - service response package of type rigid2d::set_pose::Response (empty)
@@ -149,6 +203,7 @@ int main(int argc, char** argv)
 	ros::init(argc, argv, "slam");
 	ros::NodeHandle n;
 	ros::Subscriber sub = n.subscribe("joint_states", 1000, callback);
+	ros::Subscriber sub_mark = n.subscribe("fake_sensor", 1000, markers_callback);
 	
 	double wheel_base;
 	double wheel_radius;

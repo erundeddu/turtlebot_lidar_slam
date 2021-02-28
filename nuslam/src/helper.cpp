@@ -1,4 +1,6 @@
 #include "nuslam/helper.hpp"
+#include "rigid2d/rigid2d.hpp"
+#include "rigid2d/diff_drive.hpp"
 #include <armadillo>
 #include <cmath>
 
@@ -6,7 +8,7 @@ namespace nuslam
 {
 	arma::Mat<double> compute_A_mat(rigid2d::DiffDrive & d, double l_phi_wheel_new, double r_phi_wheel_new, int n)
 	{
-		using rigid2d;
+		using namespace rigid2d;
 		
 		Twist2D t = d.getBodyTwist(l_phi_wheel_new, r_phi_wheel_new, 1.0);
 		arma::Mat<double> A_sub(3, 3, arma::fill::zeros);
@@ -28,6 +30,7 @@ namespace nuslam
 		return A;
 	}
 
+
 	arma::Mat<double> compute_Hj_mat(double dx, double dy, int n, int j)
 	{
 		double d = dx*dx + dy*dy;
@@ -39,5 +42,31 @@ namespace nuslam
 		arma::Mat<double> h4 = arma::zeros(2,2*(n-j));
 		arma::Mat<double> H = join_rows(h1,h2,h3,h4);
 		return H;
+	}
+	
+	Landmark::Landmark(double r_arg, double phi_arg, int id_arg)
+		: r(r_arg)
+		, phi(phi_arg)
+		, id(id_arg)
+	{
+	}
+	
+	void initialize_landmark(rigid2d::DiffDrive & d, Landmark & lm, arma::Mat<double> & M)
+	{
+		double mx = d.getX() + lm.r*cos(lm.phi + d.getTheta());
+		double my = d.getY() + lm.r*sin(lm.phi + d.getTheta());
+		M(2*(lm.id-1),0) = mx;
+		M(2*(lm.id-1)+1,0) = my;
+	}
+	
+	arma::Col<double> compute_meas(rigid2d::DiffDrive & d, arma::Mat<double> & M, double id)
+	{
+		using namespace rigid2d;
+		double mx = M(2*(id-1),0);
+		double my = M(2*(id-1)+1,0);
+		double r = sqrt((mx-d.getX())*(mx-d.getX()) + (my-d.getY())*(my-d.getY()));
+		double phi = normalize_angular_difference(atan2(my-d.getY(), mx-d.getX()), d.getTheta());
+		arma::Col<double> zh = {r, phi};
+		return zh;
 	}
 }
