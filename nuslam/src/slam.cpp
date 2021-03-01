@@ -11,9 +11,10 @@
 ///		q_cov (std::vector<double>): covariance matrix for odometry process noise
 ///		r_cov (std::vector<double>): covariance matrix for sensor noise
 /// PUBLISHES:
-///     odom (nav_msgs/Odometry): robot pose in the odom_frame_id frame, robot body velocity in body_frame_id
+///     odom (nav_msgs/Odometry): robot pose in the odom_frame_id frame, robot body velocity in body_frame_id  //FIXME
 ///		odom_path (nav_msgs/Path): robot path according to odometry only
 ///		slam_path (nav_msgs/Path): robot path according to SLAM
+///		slam_map (visualization_msgs/MarkerArray): landmark state from SLAM
 /// SUBSCRIBES:
 ///     joint_states (sensor_msgs/JointState): angles and angular velocities of left and right robot wheels
 ///	    fake_sensor (visualization_msgs/MarkerArray): landmarks seen by the robot
@@ -114,11 +115,6 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	
 	static arma::Mat<double> R = {	{r_cov[0], r_cov[2]},
 									{r_cov[2], r_cov[1]}};
-								
-	for (int i=0; i < n_lm; ++i)
-	{
-		is_init.push_back(0);
-	}
 		
 	static arma::Mat<double> Q_bar = arma::join_cols(arma::join_rows(Q, arma::zeros(3,2*n_lm)), arma::join_rows(arma::zeros(2*n_lm,3), arma::zeros(2*n_lm,2*n_lm)));
 	
@@ -254,6 +250,7 @@ int main(int argc, char** argv)
 	
 	ros::Publisher pub_odom = n.advertise<nav_msgs::Path>("odom_path", 1000);
 	ros::Publisher pub_slam = n.advertise<nav_msgs::Path>("slam_path", 1000);
+	ros::Publisher pub_mark = n.advertise<visualization_msgs::MarkerArray>("slam_map", 1000);
 	
 	double wheel_base;
 	double wheel_radius;
@@ -281,8 +278,11 @@ int main(int argc, char** argv)
 	ros::ServiceServer srv = n.advertiseService("set_pose", set_pose_method);
 	ros::Rate r(100);
 	M = arma::zeros(2*n_lm,1);
+	for (int i=0; i < n_lm; ++i)
+	{
+		is_init.push_back(0);
+	}
 	
-	visualization_msgs::MarkerArray slam_markers;
 	
 	while(n.ok())
 	{
@@ -290,6 +290,7 @@ int main(int argc, char** argv)
 		pub_odom.publish(odom_path);
 		pub_slam.publish(slam_path);
 		auto current_time = ros::Time::now();
+		visualization_msgs::MarkerArray slam_markers;
 		for (int i=0; i < n_lm; ++i)
 		{
 			if (is_init[i])
@@ -321,7 +322,7 @@ int main(int argc, char** argv)
 				slam_markers.markers.push_back(m);  // add marker to the array
 			}
 		}
-		
+		pub_mark.publish(slam_markers);
 		r.sleep();
 	}
 	
