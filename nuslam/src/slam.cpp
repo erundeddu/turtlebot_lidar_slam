@@ -46,6 +46,9 @@ static std::vector<double> q_cov;
 static std::vector<double> r_cov;
 static std::queue<nuslam::Landmark> qe;
 static arma::Col<double> M;
+static nav_msgs::Path odom_path;
+static nav_msgs::Path slam_path;
+static std::vector<int> is_init;
 int n_lm = 10;  // maximum number of landmarks to track
 
 
@@ -58,8 +61,6 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	
 	static ros::NodeHandle nh;
 	static tf2_ros::TransformBroadcaster broadcaster;
-	static ros::Publisher pub_odom = nh.advertise<nav_msgs::Path>("odom_path", 1000);
-	static ros::Publisher pub_slam = nh.advertise<nav_msgs::Path>("slam_path", 1000);
 	static ros::Time current_time;
 	static ros::Time last_time;
 	current_time = ros::Time::now();
@@ -89,7 +90,6 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	dd_odom.updatePose(l_phi_wheel_new, r_phi_wheel_new);  //update estimate of the model (odometry only)
 	
 	// publish odom only path
-	static nav_msgs::Path odom_path;
 	odom_path.header.frame_id = "world";  /// FIXME which frame to use?
 	odom_path.header.stamp = current_time;
 	static geometry_msgs::PoseStamped pos;
@@ -104,7 +104,6 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	pos.pose.orientation.z = q.z();
 	pos.pose.orientation.w = q.w();
 	odom_path.poses.push_back(pos);
-	pub_odom.publish(odom_path);
 	
 	
 	static arma::Mat<double> Q = {	{q_cov[0], q_cov[3], q_cov[4]},
@@ -116,7 +115,6 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	static arma::Mat<double> R = {	{r_cov[0], r_cov[2]},
 									{r_cov[2], r_cov[1]}};
 								
-	static std::vector<int> is_init;
 	for (int i=0; i < n_lm; ++i)
 	{
 		is_init.push_back(0);
@@ -159,7 +157,6 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 
 	
 	// publish SLAM path
-	static nav_msgs::Path slam_path;
 	slam_path.header.frame_id = "world";  /// FIXME which frame to use?
 	slam_path.header.stamp = current_time;
 	pos.header.stamp = current_time;
@@ -172,10 +169,10 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	pos.pose.orientation.z = q.z();
 	pos.pose.orientation.w = q.w();
 	slam_path.poses.push_back(pos);
-	pub_slam.publish(slam_path);
 	
 
 	// start referencing http://wiki.ros.org/navigation/Tutorials/RobotSetup/Odom here (Access: 2/1/2021)	
+	/*
 	odom.header.stamp = current_time;
 	odom.pose.pose.position.x = dd.getX();
 	odom.pose.pose.position.y = dd.getY();
@@ -190,6 +187,7 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	
 	static ros::Publisher pub = nh.advertise<nav_msgs::Odometry>("odom", 1000);
 	pub.publish(odom);
+	*/
 	
 	odom_trans.header.stamp = current_time;
 	odom_trans.transform.translation.x = dd.getX();
@@ -254,6 +252,9 @@ int main(int argc, char** argv)
 	ros::Subscriber sub = n.subscribe("joint_states", 1000, callback);
 	ros::Subscriber sub_mark = n.subscribe("fake_sensor", 1000, markers_callback);
 	
+	ros::Publisher pub_odom = n.advertise<nav_msgs::Path>("odom_path", 1000);
+	ros::Publisher pub_slam = n.advertise<nav_msgs::Path>("slam_path", 1000);
+	
 	double wheel_base;
 	double wheel_radius;
 	std::string odom_frame_id;
@@ -281,9 +282,46 @@ int main(int argc, char** argv)
 	ros::Rate r(100);
 	M = arma::zeros(2*n_lm,1);
 	
+	visualization_msgs::MarkerArray slam_markers;
+	
 	while(n.ok())
 	{
 		ros::spinOnce(); 
+		pub_odom.publish(odom_path);
+		pub_slam.publish(slam_path);
+		auto current_time = ros::Time::now();
+		for (int i=0; i < n_lm; ++i)
+		{
+			if (is_init[i])
+			{
+				visualization_msgs::Marker m;  // initialize marker to add to the array
+				m.header.stamp = current_time;
+				m.header.frame_id = "world";  // relative to the world (fixed) frame
+				m.ns = "slam";
+				m.id = i+1;  // unique id under namespace "real"
+				m.type = visualization_msgs::Marker::CYLINDER;
+				m.action = visualization_msgs::Marker::ADD;
+				// assign x and y positions of the marker as specified by the ros parameter
+				m.pose.position.x = M(2*i,0);
+				m.pose.position.y = M(2*i+1,0);
+				m.pose.position.z = 0;
+				m.pose.orientation.x = 0;
+				m.pose.orientation.y = 0;
+				m.pose.orientation.z = 0;
+				m.pose.orientation.w = 1;
+				// scale rviz visualization with tube_radius
+				m.scale.x = 0.07;
+				m.scale.y = 0.07;
+				m.scale.z = 0.2;
+				// red marker, not transparent
+				m.color.r = 0.0;
+				m.color.b = 0.1;
+				m.color.g = 0.0;
+				m.color.a = 1.0;
+				slam_markers.markers.push_back(m);  // add marker to the array
+			}
+		}
+		
 		r.sleep();
 	}
 	

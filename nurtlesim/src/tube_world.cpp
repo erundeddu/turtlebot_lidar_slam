@@ -182,13 +182,13 @@ int main(int argc, char** argv)
 	}
 	pub_tubes.publish(real_marker_arr);  // publish once MarkerArray
 	
-	// contains position of the markers relative to the robot frame
-	visualization_msgs::MarkerArray relative_marker_arr;
+	
 	// store robot xy position in a rigid transformation
 	Vector2D robot_pos(dd.getX(), dd.getY());
 	Transform2D t(robot_pos, dd.getTheta());
 	// find inverse of transformation
-	Transform2D tinv = t.inv();
+	//Transform2D tinv = t.inv();
+	/*
 	for(std::size_t i = 0; i < x_tubes.size(); ++i)
 	{
 		visualization_msgs::Marker m;  // define new marker to add to the array
@@ -232,6 +232,7 @@ int main(int argc, char** argv)
 		relative_marker_arr.markers.push_back(m);
 	}
 	pub_sensor.publish(relative_marker_arr);  // publish relative obstacle pose markers
+	*/
 
 	int count = 0;
 	while(n.ok())
@@ -307,6 +308,8 @@ int main(int argc, char** argv)
 			Transform2D t(robot_pos, dd.getTheta());
 			// find inverse of transformation
 			Transform2D tinv = t.inv();
+			// contains position of the markers relative to the robot frame
+			visualization_msgs::MarkerArray relative_marker_arr;
 			for(std::size_t i = 0; i < x_tubes.size(); ++i)
 			{
 				visualization_msgs::Marker m;  // define new marker to add to the array
