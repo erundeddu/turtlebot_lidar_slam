@@ -39,7 +39,7 @@ namespace nuslam
 		arma::Mat<double> h2 = arma::zeros(2,2*(j-1));
 		arma::Mat<double> h3 = {{dx/sqrt(d), dy/sqrt(d)},
 								{-dy/d, dx/d}};
-		arma::Mat<double> h4 = arma::zeros(2,2*(n-j));
+		arma::Mat<double> h4 = arma::zeros(2,2*n-2*j);
 		arma::Mat<double> H = join_rows(h1,h2,h3,h4);
 		return H;
 	}

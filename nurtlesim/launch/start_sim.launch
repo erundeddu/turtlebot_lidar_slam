@@ -4,11 +4,11 @@
 	<param name="right_wheel_joint" value="wheel_right_joint"/>
 	<param name="vx_noise" value="0.01"/>
 	<param name="w_noise" value="0.01"/>
-	<param name="slip_max" value="0.5"/>
+	<param name="slip_max" value="0.1"/>
 	<rosparam param="x_tubes">[2, -2]</rosparam>
 	<rosparam param="y_tubes">[2, 2.5]</rosparam>
 	<!-- "tube_var" is ordered as [sigma_x, sigma_y, sigma_xy] -->
-	<rosparam param="tube_var">[0.1, 0.1, 0.05]</rosparam>
+	<rosparam param="tube_var">[0.03, 0.03, 0.01]</rosparam>
 	<param name="tube_radius" value="0.0762"/>
 	<param name="d_max_tubes" value="4.0"/>
 	<param name="robot_radius" value ="0.105"/>  

@@ -38,13 +38,14 @@
 #include "nuslam/helper.hpp"
 
 static rigid2d::DiffDrive dd;
+static rigid2d::DiffDrive dd_odom;
 static nav_msgs::Odometry odom;
 static geometry_msgs::TransformStamped odom_trans;
 static bool started(false);
 static std::vector<double> q_cov; 
 static std::vector<double> r_cov;
 static std::queue<nuslam::Landmark> qe;
-static arma::Mat<double> M;
+static arma::Col<double> M;
 int n_lm = 10;  // maximum number of landmarks to track
 
 
@@ -83,9 +84,9 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	}
 	
 	//FIXME document and order these initializations
-	M = arma::zeros(2*n_lm,1);
 	arma::Mat<double> A = compute_A_mat(dd, l_phi_wheel_new, r_phi_wheel_new, n_lm);
 	dd.updatePose(l_phi_wheel_new, r_phi_wheel_new);  //update estimate of the model (odometry only)
+	dd_odom.updatePose(l_phi_wheel_new, r_phi_wheel_new);  //update estimate of the model (odometry only)
 	
 	// publish odom only path
 	static nav_msgs::Path odom_path;
@@ -93,11 +94,11 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	odom_path.header.stamp = current_time;
 	static geometry_msgs::PoseStamped pos;
 	pos.header.stamp = current_time;
-	pos.pose.position.x = dd.getX();
-	pos.pose.position.y = dd.getY();
+	pos.pose.position.x = dd_odom.getX();
+	pos.pose.position.y = dd_odom.getY();
 	pos.pose.position.z = 0.0;
 	tf2::Quaternion q;
-	q.setRPY(0, 0, dd.getTheta());
+	q.setRPY(0, 0, dd_odom.getTheta());
 	pos.pose.orientation.x = q.x();
 	pos.pose.orientation.y = q.y();
 	pos.pose.orientation.z = q.z();
@@ -113,7 +114,7 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	static arma::Mat<double> S = {arma::join_cols(arma::join_rows(arma::zeros(3,3), arma::zeros(3,2*n_lm)), arma::join_rows(arma::zeros(2*n_lm,3), 10000*arma::eye(2*n_lm,2*n_lm)))};  // initialize sigma matrix (sigma_0)
 	
 	static arma::Mat<double> R = {	{r_cov[0], r_cov[2]},
-									{r_cov[1], r_cov[2]}};
+									{r_cov[2], r_cov[1]}};
 								
 	static std::vector<int> is_init;
 	for (int i=0; i < n_lm; ++i)
@@ -126,7 +127,7 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	
 	S = A*S*arma::trans(A) + Q_bar;  // propagate uncertainty
 	
-	while (qe.size() != 0)
+	while (!qe.empty())
 	{
 		Landmark lm = qe.front();
 		qe.pop();
@@ -151,7 +152,7 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 		// update internal variables
 		RobotPose rp_new{state(0,0), state(1,0), state(2,0)};
 		dd.setPose(rp_new);
-		M = state.rows(3,M.n_rows-1);
+		M = state.rows(3,M.n_rows+2);
 		// compute the posterior covariance
 		S = (arma::eye(size(S)) - K*H)*S;
 	}
@@ -212,15 +213,18 @@ void markers_callback(const visualization_msgs::MarkerArray::ConstPtr & msg)
 	using namespace nuslam;
 	using namespace rigid2d;
 	int num_m = msg -> markers.size();
-	for (int i = 0; i < num_m; ++i)
-	{
-		if (msg -> markers[i].action == 0)
+		for (int i = 0; i < num_m; ++i)
 		{
-			Vector2D v(msg -> markers[i].pose.position.x, msg -> markers[i].pose.position.y);
-			Landmark lm(magnitude(v), angle(v), msg -> markers[i].id);
-			qe.push(lm);
+			if (msg -> markers[i].action == 0)
+			{
+				Vector2D v(msg -> markers[i].pose.position.x, msg -> markers[i].pose.position.y);
+				Landmark lm(magnitude(v), angle(v), msg -> markers[i].id);
+				//if ((int)qe.size() < n_lm) 
+				//{	
+				qe.push(lm);
+				//}
+			}
 		}
-	}
 }
 
 
@@ -272,8 +276,10 @@ int main(int argc, char** argv)
 	odom_trans.child_frame_id = body_frame_id;
 	
 	dd.setPhysicalParams(wheel_base, wheel_radius);
+	dd_odom.setPhysicalParams(wheel_base, wheel_radius);
 	ros::ServiceServer srv = n.advertiseService("set_pose", set_pose_method);
 	ros::Rate r(100);
+	M = arma::zeros(2*n_lm,1);
 	
 	while(n.ok())
 	{
