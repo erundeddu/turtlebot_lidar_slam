@@ -174,9 +174,9 @@ int main(int argc, char** argv)
 		m.scale.y = tube_radius;
 		m.scale.z = 0.2;
 		// red marker, not transparent
-		m.color.r = 1.0;
+		m.color.r = 0.0;
 		m.color.b = 0.0;
-		m.color.g = 0.0;
+		m.color.g = 1.0;
 		m.color.a = 1.0;
 		real_marker_arr.markers.push_back(m);  // add marker to the array
 	}

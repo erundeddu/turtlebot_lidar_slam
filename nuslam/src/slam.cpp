@@ -11,7 +11,7 @@
 ///		q_cov (std::vector<double>): covariance matrix for odometry process noise
 ///		r_cov (std::vector<double>): covariance matrix for sensor noise
 /// PUBLISHES:
-///     odom (nav_msgs/Odometry): robot pose in the odom_frame_id frame, robot body velocity in body_frame_id  //FIXME
+///     odom (nav_msgs/Odometry): robot pose in the odom_frame_id frame, robot body velocity in body_frame_id
 ///		odom_path (nav_msgs/Path): robot path according to odometry only
 ///		slam_path (nav_msgs/Path): robot path according to SLAM
 ///		slam_map (visualization_msgs/MarkerArray): landmark state from SLAM
@@ -168,7 +168,6 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	
 
 	// start referencing http://wiki.ros.org/navigation/Tutorials/RobotSetup/Odom here (Access: 2/1/2021)	
-	/*
 	odom.header.stamp = current_time;
 	odom.pose.pose.position.x = dd.getX();
 	odom.pose.pose.position.y = dd.getY();
@@ -183,7 +182,6 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	
 	static ros::Publisher pub = nh.advertise<nav_msgs::Odometry>("odom", 1000);
 	pub.publish(odom);
-	*/
 	
 	odom_trans.header.stamp = current_time;
 	odom_trans.transform.translation.x = dd.getX();
