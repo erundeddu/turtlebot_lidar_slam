@@ -12,9 +12,11 @@
 ///		r_cov (std::vector<double>): covariance matrix for sensor noise
 /// PUBLISHES:
 ///     odom (nav_msgs/Odometry): robot pose in the odom_frame_id frame, robot body velocity in body_frame_id
+///		odom_path (nav_msgs/Path): robot path according to odometry only
+///		slam_path (nav_msgs/Path): robot path according to SLAM
 /// SUBSCRIBES:
 ///     joint_states (sensor_msgs/JointState): angles and angular velocities of left and right robot wheels
-///	    
+///	    fake_sensor (visualization_msgs/MarkerArray): landmarks seen by the robot
 /// SERVICES:
 ///		set_pose (rigid2d/set_pose): provides a new pose to change where the robot think it is
 
@@ -23,6 +25,7 @@
 #include <tf2_ros/transform_broadcaster.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <nav_msgs/Odometry.h>
+#include <nav_msgs/Path.h>
 #include <sensor_msgs/JointState.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <visualization_msgs/Marker.h>
@@ -41,10 +44,11 @@ static bool started(false);
 static std::vector<double> q_cov; 
 static std::vector<double> r_cov;
 static std::queue<nuslam::Landmark> qe;
-int n = 10;  // maximum number of landmarks to track
+static arma::Mat<double> M;
+int n_lm = 10;  // maximum number of landmarks to track
 
 
-/// \brief Updates internal odometry state, publishes a ROS odometry message, broadcast the transform between odometry and body frame on tf //TODO
+/// \brief Updates internal odometry state, publishes a ROS odometry message, broadcast the transform between odometry and body frame on tf
 /// \param msg - a pointer to the sensor_msg/JointState message with angles and angular velocities of the robot wheels
 void callback(const sensor_msgs::JointState::ConstPtr & msg)
 {
@@ -53,6 +57,8 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	
 	static ros::NodeHandle nh;
 	static tf2_ros::TransformBroadcaster broadcaster;
+	static ros::Publisher pub_odom = nh.advertise<nav_msgs::Path>("odom_path", 1000);
+	static ros::Publisher pub_slam = nh.advertise<nav_msgs::Path>("slam_path", 1000);
 	static ros::Time current_time;
 	static ros::Time last_time;
 	current_time = ros::Time::now();
@@ -77,27 +83,48 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	}
 	
 	//FIXME document and order these initializations
-	static arma::Mat<double> M = arma::zeros(2*n,1);
-	arma::Mat<double> A = compute_A_mat(dd, l_phi_wheel_new, r_phi_wheel_new, n);
+	M = arma::zeros(2*n_lm,1);
+	arma::Mat<double> A = compute_A_mat(dd, l_phi_wheel_new, r_phi_wheel_new, n_lm);
 	dd.updatePose(l_phi_wheel_new, r_phi_wheel_new);  //update estimate of the model (odometry only)
+	
+	// publish odom only path
+	static nav_msgs::Path odom_path;
+	odom_path.header.frame_id = "world";  /// FIXME which frame to use?
+	odom_path.header.stamp = current_time;
+	static geometry_msgs::PoseStamped pos;
+	pos.header.stamp = current_time;
+	pos.pose.position.x = dd.getX();
+	pos.pose.position.y = dd.getY();
+	pos.pose.position.z = 0.0;
+	tf2::Quaternion q;
+	q.setRPY(0, 0, dd.getTheta());
+	pos.pose.orientation.x = q.x();
+	pos.pose.orientation.y = q.y();
+	pos.pose.orientation.z = q.z();
+	pos.pose.orientation.w = q.w();
+	odom_path.poses.push_back(pos);
+	pub_odom.publish(odom_path);
+	
+	
 	static arma::Mat<double> Q = {	{q_cov[0], q_cov[3], q_cov[4]},
 									{q_cov[3], q_cov[1], q_cov[5]},
 									{q_cov[4], q_cov[5], q_cov[2]}};
-									
-	static arma::Mat<double> S = {arma::join_cols(arma::join_rows(arma::zeros(3,3), arma::zeros(3,2*n)), arma::join_rows(arma::zeros(3,2*n), 10000*arma::eye(2*n,2*n)))};  // initialize sigma matrix (sigma_0)
+										
+	static arma::Mat<double> S = {arma::join_cols(arma::join_rows(arma::zeros(3,3), arma::zeros(3,2*n_lm)), arma::join_rows(arma::zeros(2*n_lm,3), 10000*arma::eye(2*n_lm,2*n_lm)))};  // initialize sigma matrix (sigma_0)
 	
 	static arma::Mat<double> R = {	{r_cov[0], r_cov[2]},
 									{r_cov[1], r_cov[2]}};
-									
+								
 	static std::vector<int> is_init;
-	for (int i=0; i < n; ++i)
+	for (int i=0; i < n_lm; ++i)
 	{
 		is_init.push_back(0);
 	}
 		
-	arma::Mat<double> Q_bar = arma::join_cols(arma::join_rows(Q, arma::zeros(3,2*n)), arma::join_rows(arma::zeros(2*n,3), arma::zeros(2*n,2*n)));
+	static arma::Mat<double> Q_bar = arma::join_cols(arma::join_rows(Q, arma::zeros(3,2*n_lm)), arma::join_rows(arma::zeros(2*n_lm,3), arma::zeros(2*n_lm,2*n_lm)));
 	
-	S = A*S*trans(A) + Q_bar;  // propagate uncertainty
+	
+	S = A*S*arma::trans(A) + Q_bar;  // propagate uncertainty
 	
 	while (qe.size() != 0)
 	{
@@ -108,12 +135,13 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 			initialize_landmark(dd, lm, M);
 			is_init[lm.id-1] = 1;
 		}
+		//TODO move to helper if necessary
 		// compute the theoretical measurement
 		arma::Col<double> zh = compute_meas(dd, M, lm.id);
 		// compute the kalman gain
 		double dx = M(2*(lm.id-1),0) - dd.getX();
 		double dy = M(2*(lm.id-1)+1,0) - dd.getY();
-		arma::Mat<double> H = compute_Hj_mat(dx, dy, n, lm.id);
+		arma::Mat<double> H = compute_Hj_mat(dx, dy, n_lm, lm.id);
 		arma::Mat<double> K = S*H.t()*arma::inv(H*S*H.t()+R);
 		// compute the posterior state update
 		arma::Col<double> z = {lm.r, lm.phi};
@@ -127,6 +155,23 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 		// compute the posterior covariance
 		S = (arma::eye(size(S)) - K*H)*S;
 	}
+
+	
+	// publish SLAM path
+	static nav_msgs::Path slam_path;
+	slam_path.header.frame_id = "world";  /// FIXME which frame to use?
+	slam_path.header.stamp = current_time;
+	pos.header.stamp = current_time;
+	pos.pose.position.x = dd.getX();
+	pos.pose.position.y = dd.getY();
+	pos.pose.position.z = 0.0;
+	q.setRPY(0, 0, dd.getTheta());
+	pos.pose.orientation.x = q.x();
+	pos.pose.orientation.y = q.y();
+	pos.pose.orientation.z = q.z();
+	pos.pose.orientation.w = q.w();
+	slam_path.poses.push_back(pos);
+	pub_slam.publish(slam_path);
 	
 
 	// start referencing http://wiki.ros.org/navigation/Tutorials/RobotSetup/Odom here (Access: 2/1/2021)	
@@ -134,8 +179,7 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	odom.pose.pose.position.x = dd.getX();
 	odom.pose.pose.position.y = dd.getY();
 	odom.pose.pose.position.z = 0.0;
-	
-	tf2::Quaternion q;
+
 	q.setRPY(0, 0, dd.getTheta());
 	
 	odom.pose.pose.orientation.x = q.x();
@@ -196,6 +240,7 @@ bool set_pose_method(rigid2d::set_pose::Request & req, rigid2d::set_pose::Respon
 	return true;
 }
 
+
 int main(int argc, char** argv)
 {
 	using namespace rigid2d;
@@ -219,6 +264,7 @@ int main(int argc, char** argv)
 	n.getParam("left_wheel_joint", left_wheel_joint);
 	n.getParam("right_wheel_joint", right_wheel_joint);
 	n.getParam("q_cov", q_cov);
+	n.getParam("r_cov", r_cov);
 	
 	odom.header.frame_id = odom_frame_id;
 	odom.child_frame_id = body_frame_id;
