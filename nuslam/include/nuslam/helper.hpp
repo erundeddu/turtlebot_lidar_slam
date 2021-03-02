@@ -11,12 +11,13 @@
 namespace nuslam 
 {
 	/// \brief compute the matrix A (derivative of state update with respect to the state)
-	/// \param d - the diff drive robot at time t-1
+	/// \param dd - the diff drive robot odometry at t-1
+	/// \param t_mb - the map to base_footprint transform at t-1
 	/// \param l_phi_wheel_new - the angle of the robot left wheel at time t
 	/// \param r_phi_wheel_new - the angle of the robot right wheel at time t
 	/// \param n - the number of landmarks
 	/// \return the matrix of A as an armadillo matrix
-	arma::Mat<double> compute_A_mat(rigid2d::DiffDrive & d, double l_phi_wheel_new, double r_phi_wheel_new, int n);
+	arma::Mat<double> compute_A_mat(rigid2d::DiffDrive & dd, rigid2d::Transform2D & t_mb, double l_phi_wheel_new, double r_phi_wheel_new, int n);
 	
 	/// \brief compute the matrix H_j
 	/// \param dx - estimated relative x distance
@@ -43,17 +44,17 @@ namespace nuslam
     };
     
     /// \brief initialize landmark in state estimate vector of the map
-    /// param d - the diff drive robot at time t
+    /// param t_mb - the map to base_footprint transform at t
     /// param lm - the landmark to initialize
     /// param M - the state estimate vector of the map at time t-1
-    void initialize_landmark(rigid2d::DiffDrive & d, Landmark & lm, arma::Mat<double> & M);
+    void initialize_landmark(rigid2d::Transform2D & t_mb, Landmark & lm, arma::Mat<double> & M);
     
     /// \brief compute theoretical measurement for a landmark
-    /// param d - the diff drive robot at time t
+    /// param t_mb - the map to base_footprint transform at t
     /// param M - the state estimate vector of the map at time t-1
     /// param id - the landmark id
     /// return theoretical measurement vector [r, phi]^T
-    arma::Col<double> compute_meas(rigid2d::DiffDrive & d, arma::Mat<double> & M, double id);
+    arma::Col<double> compute_meas(rigid2d::Transform2D & t_mb, arma::Mat<double> & M, double id);
 }
 
 #endif
