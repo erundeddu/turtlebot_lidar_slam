@@ -9,6 +9,7 @@
 	</group>
 	<param name="odom_frame_id" value="odom"/>
 	<param name="body_frame_id" value="base_footprint"/>
+	<param name="robot_description" command="$(find xacro)/xacro $(find nuturtle_description)/urdf/turtlebot3_burger.urdf.xacro" /> 
 	
 	<!-- q_cov is ordered as [sigma_theta, sigma_x, sigma_y, sigma_xtheta, sigma_ytheta, sigma_xy] -->
 	<rosparam param="q_cov">[0.2, 0.2, 0.2, 0.01, 0.01, 0.01]</rosparam>
@@ -32,7 +33,7 @@
 		<node machine="turtlebot" pkg="nuturtle_robot" type="turtle_interface" name="turtle_interface"/>
 		<node pkg="turtlebot3_teleop" type="turtlebot3_teleop_key" name="turtlebot3_teleop_keyboard" output="screen"/>
 	</group>
-
+	
 	<node machine="turtlebot" pkg="nuslam" type="slam" name="slam"/>
 	<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" /> 
 	<node name="rviz" pkg="rviz" type="rviz" args="-d '$(find nuslam)/config/sim_slam.rviz'"/>

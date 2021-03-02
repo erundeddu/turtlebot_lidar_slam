@@ -270,7 +270,7 @@ int main(int argc, char** argv)
 	
 	odom.header.frame_id = odom_frame_id;
 	odom.child_frame_id = body_frame_id;
-	odom_trans.header.frame_id = odom_frame_id;
+	odom_trans.header.frame_id = "world";//odom_frame_id;
 	odom_trans.child_frame_id = body_frame_id;
 	
 	dd.setPhysicalParams(wheel_base, wheel_radius);
