@@ -44,17 +44,33 @@ namespace nuslam
     };
     
     /// \brief initialize landmark in state estimate vector of the map
-    /// param t_mb - the map to base_footprint transform at t
-    /// param lm - the landmark to initialize
-    /// param M - the state estimate vector of the map at time t-1
+    /// \param t_mb - the map to base_footprint transform at t
+    /// \param lm - the landmark to initialize
+    /// \param M - the state estimate vector of the map at time t-1
     void initialize_landmark(rigid2d::Transform2D & t_mb, Landmark & lm, arma::Mat<double> & M);
     
     /// \brief compute theoretical measurement for a landmark
-    /// param t_mb - the map to base_footprint transform at t
-    /// param M - the state estimate vector of the map at time t-1
-    /// param id - the landmark id
-    /// return theoretical measurement vector [r, phi]^T
+    /// \param t_mb - the map to base_footprint transform at t
+    /// \param M - the state estimate vector of the map at time t-1
+    /// \param id - the landmark id
+    /// \return theoretical measurement vector [r, phi]^T
     arma::Col<double> compute_meas(rigid2d::Transform2D & t_mb, arma::Mat<double> & M, double id);
+    
+    /// \brief initialize the matrix Q_bar, used in SLAM algorithm
+    /// \param q_cov - the vector of process noise covariances in the format [sigma_theta, sigma_x, sigma_y, sigma_xtheta, sigma_ytheta, sigma_xy]
+    /// \param n_lm - the number of landmarks to track
+    /// \return the (2*n_lm+3)x(2*n_lm+3) matrix Q_bar
+    arma::Mat<double> initialize_Qbar(std::vector<double> & q_cov, double n_lm);
+    
+    /// \brief initialize the matrix sigma, used in SLAM algorithm
+    /// \param n_lm - the number of landmarks to track
+    /// \return the (2*n_lm+3)x(2*n_lm+3) matrix Sigma
+    arma::Mat<double> initialize_S(double n_lm);
+    
+    /// \brief initialize the matrix R, used in SLAM algorithm
+    /// \param r_cov - the vector of sensor noise covariances in the format [sigma_x, sigma_y, sigma_xy]
+    /// \return the (2x2) matrix R
+    arma::Mat<double> initialize_R(std::vector<double> & r_cov);
 }
 
 #endif

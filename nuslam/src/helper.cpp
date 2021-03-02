@@ -69,4 +69,27 @@ namespace nuslam
 		arma::Col<double> zh = {r, phi};
 		return zh;
 	}
+	
+	arma::Mat<double> initialize_Qbar(std::vector<double> & q_cov, double n_lm)
+	{
+		arma::Mat<double> Q = {	{q_cov[0], q_cov[3], q_cov[4]},
+								{q_cov[3], q_cov[1], q_cov[5]},
+								{q_cov[4], q_cov[5], q_cov[2]}};
+								
+		arma::Mat<double> Q_bar = arma::join_cols(arma::join_rows(Q, arma::zeros(3,2*n_lm)), arma::join_rows(arma::zeros(2*n_lm,3), arma::zeros(2*n_lm,	2*n_lm)));
+		return Q_bar;
+	}
+	
+	arma::Mat<double> initialize_S(double n_lm)
+	{								
+		arma::Mat<double> S = {arma::join_cols(arma::join_rows(arma::zeros(3,3), arma::zeros(3,2*n_lm)), arma::join_rows(arma::zeros(2*n_lm,3), 10000*arma::eye(2*n_lm,2*n_lm)))};
+		return S;
+	}
+	
+	arma::Mat<double> initialize_R(std::vector<double> & r_cov)
+	{
+		arma::Mat<double> R = {	{r_cov[0], r_cov[2]},
+								{r_cov[2], r_cov[1]}};
+		return R;
+	}	
 }

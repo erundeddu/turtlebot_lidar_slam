@@ -39,25 +39,27 @@
 #include "nuslam/helper.hpp"
 
 static rigid2d::DiffDrive dd;
-static rigid2d::DiffDrive dd_odom;
 static nav_msgs::Odometry odom;
 static geometry_msgs::TransformStamped odom2body;
 static geometry_msgs::TransformStamped world2map;
 static geometry_msgs::TransformStamped map2odom;
 static bool started(false);
-static std::vector<double> q_cov; 
-static std::vector<double> r_cov;
 static std::queue<nuslam::Landmark> qe;
 static arma::Col<double> M;
 static nav_msgs::Path odom_path;
 static nav_msgs::Path slam_path;
 static std::vector<int> is_init;
 int n_lm = 10;  // maximum number of landmarks to track
-static std::string odom_frame_id;
+static geometry_msgs::PoseStamped pos;
 
 static rigid2d::Transform2D t_mb;  // map to base_footprint transform
 static rigid2d::Transform2D t_mo;  // map to odom transform
 static rigid2d::Transform2D t_ob;  // odom to base_footprint transform
+
+// matrices for SLAM
+static arma::Mat<double> S;
+static arma::Mat<double> R;
+static arma::Mat<double> Q_bar;
 
 
 /// \brief Updates internal odometry state, publishes a ROS odometry message, broadcast the transform between odometry and body frame on tf
@@ -68,7 +70,6 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	using namespace nuslam;
 	
 	static ros::NodeHandle nh;
-	static tf2_ros::TransformBroadcaster broadcaster;
 	static ros::Time current_time;
 	static ros::Time last_time;
 	current_time = ros::Time::now();
@@ -101,11 +102,7 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	t_ob = t_bb;  // get new odometry state
 	t_mb = t_mo*t_ob;  // recalculate map to base_footprint transform
 	
-	// publish odom only path
-	odom_path.header.frame_id = odom_frame_id;
-	odom_path.header.stamp = current_time;
-	static geometry_msgs::PoseStamped pos;
-	pos.header.stamp = current_time;
+	// construct message for odom path
 	pos.pose.position.x = t_ob.getX();
 	pos.pose.position.y = t_ob.getY();
 	pos.pose.position.z = 0.0;
@@ -116,31 +113,18 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	pos.pose.orientation.z = q.z();
 	pos.pose.orientation.w = q.w();
 	odom_path.poses.push_back(pos);
-	
-	static arma::Mat<double> Q = {	{q_cov[0], q_cov[3], q_cov[4]},
-									{q_cov[3], q_cov[1], q_cov[5]},
-									{q_cov[4], q_cov[5], q_cov[2]}};
-										
-	static arma::Mat<double> S = {arma::join_cols(arma::join_rows(arma::zeros(3,3), arma::zeros(3,2*n_lm)), arma::join_rows(arma::zeros(2*n_lm,3), 10000*arma::eye(2*n_lm,2*n_lm)))};  // initialize sigma matrix (sigma_0)
-	
-	static arma::Mat<double> R = {	{r_cov[0], r_cov[2]},
-									{r_cov[2], r_cov[1]}};
 		
-	static arma::Mat<double> Q_bar = arma::join_cols(arma::join_rows(Q, arma::zeros(3,2*n_lm)), arma::join_rows(arma::zeros(2*n_lm,3), arma::zeros(2*n_lm,2*n_lm)));
-	
-	
 	S = A*S*arma::trans(A) + Q_bar;  // propagate uncertainty
 	
-	while (!qe.empty())
+	while (!qe.empty())  // if markers message are available, process them
 	{
-		Landmark lm = qe.front();
-		qe.pop();
+		Landmark lm = qe.front();  // get landmark
+		qe.pop();  // delete landmark from queue
 		if (!is_init[lm.id-1])  // landmark id's start from 1
 		{
 			initialize_landmark(t_mb, lm, M);
 			is_init[lm.id-1] = 1;
 		}
-		//TODO move to helper if necessary
 		// compute the theoretical measurement
 		arma::Col<double> zh = compute_meas(t_mb, M, lm.id);
 		// compute the kalman gain
@@ -154,22 +138,17 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 		arma::Col<double> state = arma::join_cols(q, M);
 		arma::Col<double> delta_z = {z(0,0)-zh(0,0), normalize_angular_difference(z(1,0), zh(1,0))};
 		state += K*delta_z;
-		// update internal variables
+		// update internal transformations and states
 		Vector2D v_mb_goal(state(1,0), state(2,0));
 		Transform2D t_mb_goal(v_mb_goal, state(0,0));
 		t_mo = t_mb_goal*t_ob.inv();
 		t_mb = t_mb_goal;
-		//RobotPose rp_new{state(0,0), state(1,0), state(2,0)};
-		//dd.setPose(rp_new);
 		M = state.rows(3,M.n_rows+2);
 		// compute the posterior covariance
 		S = (arma::eye(size(S)) - K*H)*S;
 	}
 
-	
-	// publish SLAM path
-	slam_path.header.frame_id = "map";  /// FIXME which frame to use?
-	slam_path.header.stamp = current_time;
+	// construct message for SLAM path
 	pos.header.stamp = current_time;
 	pos.pose.position.x = t_mb.getX();
 	pos.pose.position.y = t_mb.getY();
@@ -181,24 +160,17 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	pos.pose.orientation.w = q.w();
 	slam_path.poses.push_back(pos);
 	
-
-	// start referencing http://wiki.ros.org/navigation/Tutorials/RobotSetup/Odom here (Access: 2/1/2021)	
-	odom.header.stamp = current_time;
+	// construct odometry message	
 	odom.pose.pose.position.x = t_ob.getX();
 	odom.pose.pose.position.y = t_ob.getY();
 	odom.pose.pose.position.z = 0.0;
-
 	q.setRPY(0, 0, t_ob.getTheta());
-	
 	odom.pose.pose.orientation.x = q.x();
 	odom.pose.pose.orientation.y = q.y();
 	odom.pose.pose.orientation.z = q.z();
 	odom.pose.pose.orientation.w = q.w();
 	
-	static ros::Publisher pub = nh.advertise<nav_msgs::Odometry>("odom", 1000);
-	pub.publish(odom);
-	
-	odom2body.header.stamp = current_time;
+	// construct odom to base_footprint transform
 	odom2body.transform.translation.x = dd.getX();
 	odom2body.transform.translation.y = dd.getY();
 	odom2body.transform.translation.z = 0.0;
@@ -206,9 +178,8 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	odom2body.transform.rotation.y = q.y();
 	odom2body.transform.rotation.z = q.z();
 	odom2body.transform.rotation.w = q.w();
-	broadcaster.sendTransform(odom2body);
 	
-	map2odom.header.stamp = current_time;
+	// construct map to odom transform
 	map2odom.transform.translation.x = t_mo.getX();
 	map2odom.transform.translation.y = t_mo.getY();
 	map2odom.transform.translation.z = 0;
@@ -217,11 +188,9 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	map2odom.transform.rotation.y = q.y();
 	map2odom.transform.rotation.z = q.z();
 	map2odom.transform.rotation.w = q.w();
-	broadcaster.sendTransform(map2odom);
 		
 	last_time = current_time;
 	started = true;
-	// end referencing http://wiki.ros.org/navigation/Tutorials/RobotSetup/Odom here (Access: 2/1/2021)
 }
 
 
@@ -264,22 +233,29 @@ bool set_pose_method(rigid2d::set_pose::Request & req, rigid2d::set_pose::Respon
 int main(int argc, char** argv)
 {
 	using namespace rigid2d;
+	using namespace nuslam;
 	
 	ros::init(argc, argv, "slam");
 	ros::NodeHandle n;
+	ros::Rate r(100);
 	ros::Subscriber sub = n.subscribe("joint_states", 1000, callback);
 	ros::Subscriber sub_mark = n.subscribe("fake_sensor", 1000, markers_callback);
 	
 	ros::Publisher pub_odom = n.advertise<nav_msgs::Path>("odom_path", 1000);
 	ros::Publisher pub_slam = n.advertise<nav_msgs::Path>("slam_path", 1000);
 	ros::Publisher pub_mark = n.advertise<visualization_msgs::MarkerArray>("slam_map", 1000);
-	tf2_ros::TransformBroadcaster main_broadcaster;
+	ros::Publisher pub_nav = n.advertise<nav_msgs::Odometry>("odom", 1000);
+	tf2_ros::TransformBroadcaster broadcaster;
+	ros::ServiceServer srv = n.advertiseService("set_pose", set_pose_method);
 	
 	double wheel_base;
 	double wheel_radius;
+	std::string odom_frame_id;
 	std::string body_frame_id;
 	std::string left_wheel_joint;
 	std::string right_wheel_joint;
+	std::vector<double> q_cov; 
+	std::vector<double> r_cov;
 	
 	n.getParam("wheel_base", wheel_base);
 	n.getParam("wheel_radius", wheel_radius);
@@ -301,22 +277,25 @@ int main(int argc, char** argv)
 	map2odom.header.frame_id = "map";
 	map2odom.child_frame_id = odom_frame_id;
 	
+	slam_path.header.frame_id = "map";
+	odom_path.header.frame_id = odom_frame_id;
+	
 	dd.setPhysicalParams(wheel_base, wheel_radius);
-	dd_odom.setPhysicalParams(wheel_base, wheel_radius);
-	ros::ServiceServer srv = n.advertiseService("set_pose", set_pose_method);
-	ros::Rate r(100);
-	M = arma::zeros(2*n_lm,1);
-	for (int i=0; i < n_lm; ++i)
+	
+	M = arma::zeros(2*n_lm,1);  // initialize map vector
+	
+	for (int i=0; i < n_lm; ++i) // initialize vector to check for landmark initialization
 	{
 		is_init.push_back(0);
 	}
-	
+										
+	S = initialize_S(n_lm);
+	R = initialize_R(r_cov);
+	Q_bar = initialize_Qbar(q_cov, n_lm);	
 	
 	while(n.ok())
 	{
 		ros::spinOnce(); 
-		pub_odom.publish(odom_path);
-		pub_slam.publish(slam_path);
 		auto current_time = ros::Time::now();
 		visualization_msgs::MarkerArray slam_markers;
 		for (int i=0; i < n_lm; ++i)
@@ -350,9 +329,7 @@ int main(int argc, char** argv)
 				slam_markers.markers.push_back(m);  // add marker to the array
 			}
 		}
-		pub_mark.publish(slam_markers);
 		
-		world2map.header.stamp = current_time;
 		world2map.transform.translation.x = 0;
 		world2map.transform.translation.y = 0;
 		world2map.transform.translation.z = 0;
@@ -360,7 +337,23 @@ int main(int argc, char** argv)
 		world2map.transform.rotation.y = 0;
 		world2map.transform.rotation.z = 0;
 		world2map.transform.rotation.w = 1;
-		main_broadcaster.sendTransform(world2map);
+		
+		odom_path.header.stamp = current_time;
+		pos.header.stamp = current_time;
+		odom.header.stamp = current_time;
+		slam_path.header.stamp = current_time;
+		world2map.header.stamp = current_time;
+		map2odom.header.stamp = current_time;
+		odom2body.header.stamp = current_time;
+		
+		pub_mark.publish(slam_markers);
+		pub_odom.publish(odom_path);
+		pub_slam.publish(slam_path);
+		pub_nav.publish(odom);
+		
+		broadcaster.sendTransform(world2map);
+		broadcaster.sendTransform(odom2body);
+		broadcaster.sendTransform(map2odom);
 		
 		r.sleep();
 	}
