@@ -215,10 +215,7 @@ void markers_callback(const visualization_msgs::MarkerArray::ConstPtr & msg)
 			{
 				Vector2D v(msg -> markers[i].pose.position.x, msg -> markers[i].pose.position.y);
 				Landmark lm(magnitude(v), angle(v), msg -> markers[i].id);
-				//if ((int)qe.size() < n_lm) 
-				//{	
 				qe.push(lm);
-				//}
 			}
 		}
 }
