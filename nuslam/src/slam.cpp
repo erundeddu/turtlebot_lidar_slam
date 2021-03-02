@@ -1,5 +1,5 @@
 /// \file
-/// \brief Publishes odometry messages in a standard ROS way
+/// \brief performs SLAM for a robot given landmark makers and publishes rviz compatible paths for odometry-only pose estimate and SLAM pose estimate
 ///
 /// PARAMETERS:
 ///		wheel_base (double): the distance between the robot wheels
@@ -41,7 +41,9 @@
 static rigid2d::DiffDrive dd;
 static rigid2d::DiffDrive dd_odom;
 static nav_msgs::Odometry odom;
-static geometry_msgs::TransformStamped odom_trans;
+static geometry_msgs::TransformStamped odom2body;
+static geometry_msgs::TransformStamped world2map;
+static geometry_msgs::TransformStamped map2odom;
 static bool started(false);
 static std::vector<double> q_cov; 
 static std::vector<double> r_cov;
@@ -184,15 +186,15 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	static ros::Publisher pub = nh.advertise<nav_msgs::Odometry>("odom", 1000);
 	pub.publish(odom);
 	
-	odom_trans.header.stamp = current_time;
-	odom_trans.transform.translation.x = dd.getX();
-	odom_trans.transform.translation.y = dd.getY();
-	odom_trans.transform.translation.z = 0.0;
-	odom_trans.transform.rotation.x = q.x();
-	odom_trans.transform.rotation.y = q.y();
-	odom_trans.transform.rotation.z = q.z();
-	odom_trans.transform.rotation.w = q.w();
-	broadcaster.sendTransform(odom_trans);
+	odom2body.header.stamp = current_time;
+	odom2body.transform.translation.x = dd.getX();
+	odom2body.transform.translation.y = dd.getY();
+	odom2body.transform.translation.z = 0.0;
+	odom2body.transform.rotation.x = q.x();
+	odom2body.transform.rotation.y = q.y();
+	odom2body.transform.rotation.z = q.z();
+	odom2body.transform.rotation.w = q.w();
+	broadcaster.sendTransform(odom2body);
 		
 	last_time = current_time;
 	started = true;
@@ -251,6 +253,7 @@ int main(int argc, char** argv)
 	ros::Publisher pub_odom = n.advertise<nav_msgs::Path>("odom_path", 1000);
 	ros::Publisher pub_slam = n.advertise<nav_msgs::Path>("slam_path", 1000);
 	ros::Publisher pub_mark = n.advertise<visualization_msgs::MarkerArray>("slam_map", 1000);
+	tf2_ros::TransformBroadcaster main_broadcaster;
 	
 	double wheel_base;
 	double wheel_radius;
@@ -270,8 +273,14 @@ int main(int argc, char** argv)
 	
 	odom.header.frame_id = odom_frame_id;
 	odom.child_frame_id = body_frame_id;
-	odom_trans.header.frame_id = "world";//odom_frame_id;
-	odom_trans.child_frame_id = body_frame_id;
+	odom2body.header.frame_id = odom_frame_id;
+	odom2body.child_frame_id = body_frame_id;
+	
+	world2map.header.frame_id = "world";
+	world2map.child_frame_id = "map";
+	
+	map2odom.header.frame_id = "map";
+	map2odom.child_frame_id = odom_frame_id;
 	
 	dd.setPhysicalParams(wheel_base, wheel_radius);
 	dd_odom.setPhysicalParams(wheel_base, wheel_radius);
@@ -323,6 +332,27 @@ int main(int argc, char** argv)
 			}
 		}
 		pub_mark.publish(slam_markers);
+		
+		world2map.header.stamp = current_time;
+		world2map.transform.translation.x = 0;
+		world2map.transform.translation.y = 0;
+		world2map.transform.translation.z = 0;
+		world2map.transform.rotation.x = 0;
+		world2map.transform.rotation.y = 0;
+		world2map.transform.rotation.z = 0;
+		world2map.transform.rotation.w = 1;
+		main_broadcaster.sendTransform(world2map);
+		
+		map2odom.header.stamp = current_time;
+		map2odom.transform.translation.x = 0;
+		map2odom.transform.translation.y = 0;
+		map2odom.transform.translation.z = 0;
+		map2odom.transform.rotation.x = 0;
+		map2odom.transform.rotation.y = 0;
+		map2odom.transform.rotation.z = 0;
+		map2odom.transform.rotation.w = 1;
+		main_broadcaster.sendTransform(map2odom);
+		
 		r.sleep();
 	}
 	
