@@ -321,7 +321,6 @@ int main(int argc, char** argv)
 				m.scale.x = 0.07;
 				m.scale.y = 0.07;
 				m.scale.z = 0.2;
-				// red marker, not transparent
 				m.color.r = 0.0;
 				m.color.b = 0.1;
 				m.color.g = 0.0;

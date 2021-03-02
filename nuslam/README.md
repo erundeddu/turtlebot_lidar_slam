@@ -8,4 +8,14 @@
 roslaunch nuslam slam.launch robot:=localhost
 ```
 ![Sample simulation](images/sim1.png)
+* Green path: the real path of the simulated robot
+* Blue path: the estimated path through SLAM
+* Red path: the estimated path through odometry only
+* Turtle frame: the real pose of the robot
+* Map frame to odom frame: the corrections to the pose estimate through SLAM
+* Green markers: the real position of the obstacles in space
+* Red markers: the current position of the obstacles in space sensed by the robot (far obstacles do not have red overlap since they may be outside of the sensing range)
+* Dark blue markers: the position of the obstacles in space estimated through SLAM
+
 ![Collision simulation](images/sim2.png)
+* Shows approximately matching real path and SLAM path at the beginning of the simulation, while the odometry path is different due to the robot wheels moving during the collision
