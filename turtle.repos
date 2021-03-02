@@ -1,1 +1,9 @@
 repositories:
+  nuturtlebot:
+    type: git
+    url: https://github.com/ME495-Navigation/nuturtlebot
+    version: master
+  repository:
+    type: git
+    url: https://github.com/ME495-Navigation/assignment-erundeddu.git
+    version: develop
