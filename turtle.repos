@@ -1,5 +1,1 @@
 repositories:
-  nuturtlebot:
-    type: git
-    url: https://github.com/ME495-Navigation/nuturtlebot
-    version: master
