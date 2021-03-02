@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <launch>
-	<arg name="use_rviz" default="true" doc="if true, launch rviz" />
+	<arg name="use_rviz" default="true" doc="if true, launch rviz"/>
 	<param name="left_wheel_joint" value="wheel_left_joint"/>
 	<param name="right_wheel_joint" value="wheel_right_joint"/>
 	<param name="vx_noise" value="0.01"/>
@@ -16,7 +16,7 @@
 	<rosparam command="load" file="$(find nuturtle_description)/config/diff_params.yaml" />
 	
 	<node pkg="turtlebot3_teleop" type="turtlebot3_teleop_key" name="turtlebot3_teleop_keyboard" output="screen"/>
-	<node pkg="nurtlesim" type="tube_world" name="tube_world" output="screen"/>
+	<node pkg="nurtlesim" type="tube_world" name="tube_world"/>
 	<group if="$(arg use_rviz)">
 		<node name="rviz" pkg="rviz" type="rviz" args="-d '$(find nurtlesim)/config/sim.rviz'"/>
 	</group>
