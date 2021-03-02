@@ -41,6 +41,7 @@
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>rviz</exec_depend>
   <exec_depend>hls_lfcd_lds_driver</exec_depend>
+  <exec_depend>tf</exec_depend>
   <!-- Use test_depend for packages you need only for testing: -->
   <test_depend>rostest</test_depend>
   <!--   <test_depend>gtest</test_depend> -->
