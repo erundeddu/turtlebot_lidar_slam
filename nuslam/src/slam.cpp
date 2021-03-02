@@ -142,7 +142,8 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 		arma::Col<double> z = {lm.r, lm.phi};
 		arma::Col<double> q = {dd.getTheta(), dd.getX(), dd.getY()};
 		arma::Col<double> state = arma::join_cols(q, M);
-		state += K*(z-zh);
+		arma::Col<double> delta_z = {z(0,0)-zh(0,0), normalize_angular_difference(z(1,0), zh(1,0))};
+		state += K*delta_z;
 		// update internal variables
 		RobotPose rp_new{state(0,0), state(1,0), state(2,0)};
 		dd.setPose(rp_new);
@@ -199,7 +200,8 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 }
 
 
-//TODO comment
+/// \brief receives information about markers and adds them to a queue to be processed by the slam loop
+/// \param msg - a pointer to the visualization_msgs/MarkerArray message containing all simulated markers seen by the robot
 void markers_callback(const visualization_msgs::MarkerArray::ConstPtr & msg)
 {
 	using namespace nuslam;

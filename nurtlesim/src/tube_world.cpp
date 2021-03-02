@@ -187,52 +187,6 @@ int main(int argc, char** argv)
 	Vector2D robot_pos(dd.getX(), dd.getY());
 	Transform2D t(robot_pos, dd.getTheta());
 	// find inverse of transformation
-	//Transform2D tinv = t.inv();
-	/*
-	for(std::size_t i = 0; i < x_tubes.size(); ++i)
-	{
-		visualization_msgs::Marker m;  // define new marker to add to the array
-		m.header.stamp = current_time; 
-		m.header.frame_id = "turtle";  // position of marker is relative to the robot frame
-		m.ns = "relative";
-		m.id = i+1;  // unique id in namespace "relative"
-		m.type = visualization_msgs::Marker::CYLINDER;
-		
-		Vector2D p_abs(x_tubes[i], y_tubes[i]);  // store position of the tube with respect to the world frame in a vector
-		
-		std::vector<double> noise_vec = mv_xy.draw();
-		Vector2D p_noise((double)noise_vec[0], (double)noise_vec[1]);
-		
-		Vector2D p_rel = tinv(p_abs) + p_noise;  // find position of tubes in the robot frame and add noise
-		double mag = magnitude(p_rel);  // calculate sensed robot-tube distance
-		
-		// Check if distance to obstacle is above sensing range
-		if (mag <= d_max_tubes)
-		{
-			m.action = visualization_msgs::Marker::MODIFY;
-		}
-		else
-		{
-			m.action = visualization_msgs::Marker::DELETE;
-		}
-		m.pose.position.x = p_rel.x;
-		m.pose.position.y = p_rel.y;
-		m.pose.position.z = 0;
-		m.pose.orientation.x = 0;
-		m.pose.orientation.y = 0;
-		m.pose.orientation.z = 0;
-		m.pose.orientation.w = 1;
-		m.scale.x = tube_radius;
-		m.scale.y = tube_radius;
-		m.scale.z = 0.2;
-		m.color.r = 1.0;
-		m.color.b = 0.0;
-		m.color.g = 0.0;
-		m.color.a = 1.0;
-		relative_marker_arr.markers.push_back(m);
-	}
-	pub_sensor.publish(relative_marker_arr);  // publish relative obstacle pose markers
-	*/
 
 	int count = 0;
 	while(n.ok())
