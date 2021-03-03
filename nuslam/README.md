@@ -9,8 +9,8 @@ roslaunch nuslam slam.launch robot:=localhost
 ```
 ![Sample simulation](images/sim1.png)
 * Green path: the real path of the simulated robot
-* Blue path: the estimated path through SLAM
-* Red path: the estimated path through odometry only
+* Blue path: the estimated path through SLAM, approximately matches the real path
+* Red path: the estimated path through odometry only, does not match the real path
 * Turtle frame: the real pose of the robot
 * Map frame to odom frame: the corrections to the pose estimate through SLAM
 * Green markers: the real position of the obstacles in space
