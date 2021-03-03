@@ -278,7 +278,7 @@ int main(int argc, char** argv)
 	map2odom.child_frame_id = odom_frame_id;
 	
 	slam_path.header.frame_id = "map";
-	odom_path.header.frame_id = odom_frame_id;
+	odom_path.header.frame_id = "map";
 	
 	dd.setPhysicalParams(wheel_base, wheel_radius);
 	
