@@ -257,8 +257,6 @@ int main(int argc, char** argv)
 	Vector2D robot_pos(dd.getX(), dd.getY());
 	Transform2D t(robot_pos, dd.getTheta());
 
-	double alpha = atan(border_height/border_width);
-
 	int count = 0;
 	int laser_count = 0;
 	while(n.ok())
@@ -401,22 +399,26 @@ int main(int argc, char** argv)
 				double absolute_scan_angle = normalize_angle(relative_scan_angle + dd.getTheta());  // current lidar angle in world frame
 				Vector2D p1(dd.getX(), dd.getY());  // robot xy coords wrt world frame
 				Vector2D p2;  // point on the border coords wrt world frame
-				if ((absolute_scan_angle >= -alpha) && (absolute_scan_angle <= alpha))  // west wall
+				double alpha = atan((0.5*border_height-dd.getY())/(0.5*border_width-dd.getX()));
+				double beta = atan((0.5*border_height+dd.getY())/(0.5*border_width-dd.getX()));
+				double gamma = atan((0.5*border_height-dd.getY())/(0.5*border_width+dd.getX()));
+				double delta = atan((0.5*border_height+dd.getY())/(0.5*border_width+dd.getX()));
+				if ((absolute_scan_angle >= -beta) && (absolute_scan_angle <= alpha))  // west wall
 				{
 					p2.x = border_width/2;
 					p2.y = p1.y + tan(absolute_scan_angle)*(p2.x - p1.x);
 				}
-				else if ((absolute_scan_angle > alpha) && (absolute_scan_angle < PI-alpha)) // north wall
+				else if ((absolute_scan_angle > alpha) && (absolute_scan_angle < PI-gamma)) // north wall
 				{
 					p2.y = border_height/2;
 					p2.x = p1.x + (p2.y - p1.y)/tan(absolute_scan_angle);					
 				}
-				else if ((absolute_scan_angle >= PI-alpha) || (absolute_scan_angle <= -PI+alpha)) // east wall
+				else if ((absolute_scan_angle >= PI-gamma) || (absolute_scan_angle <= -PI+delta)) // east wall
 				{
 					p2.x = -border_width/2;
 					p2.y = p1.y + tan(absolute_scan_angle)*(p2.x - p1.x);
 				}
-				else if ((absolute_scan_angle > -PI+alpha) && (absolute_scan_angle < -alpha)) // south wall
+				else if ((absolute_scan_angle > -PI+delta) && (absolute_scan_angle < -beta)) // south wall
 				{
 					p2.y = -border_height/2;
 					p2.x = p1.x + (p2.y - p1.y)/tan(absolute_scan_angle);
