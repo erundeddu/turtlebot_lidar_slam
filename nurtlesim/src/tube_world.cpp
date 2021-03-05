@@ -159,6 +159,7 @@ int main(int argc, char** argv)
 	
 	// define gaussian distributions given ros parameters
 	std::uniform_real_distribution<> slip_unif(0, slip_max);
+	std::normal_distribution<> laser_gauss(0.0, lidar_noise);
 	
 	// obtain matrix for x-y sensor noise bivariate Gaussian
 	arma::Mat<double> Q = { {tube_var[0], tube_var[2]},
@@ -448,6 +449,7 @@ int main(int argc, char** argv)
 						}
 					}
 				}
+				range += laser_gauss(get_random());  // apply noise
 				int num_resolutions = range/lidar_resolution;  // convert simulated data according to lidar resolution
 				range = num_resolutions * lidar_resolution;
 				simulated_laser.ranges.push_back(range);

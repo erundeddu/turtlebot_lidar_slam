@@ -33,7 +33,7 @@ namespace circles
 			i1.y = (-D*dx+std::abs(dy)*sqrt(discriminant))/(dr*dr);
 			i2.y = (-D*dx-std::abs(dy)*sqrt(discriminant))/(dr*dr);
 			Vector2D p1_i1(i1.x-p1.x, i1.y-p1.y);
-			Vector2D p1_i2(i1.x-p2.x, i1.y-p2.y);
+			Vector2D p1_i2(i2.x-p1.x, i2.y-p1.y);
 			if ((p1_i1.x*p1_p2.x + p1_i1.y*p1_p2.y) < 0)  // dot product to screen out antiparallel cases (symmetry of PI)
 			{
 				i1.is_intersection = false;
