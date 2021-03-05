@@ -14,11 +14,21 @@
 ///		tube_radius (double): radius of the obstacle tubes
 ///		d_max_tubes (double): maximum distance beyond which tubes are not visible
 ///		robot_radius (double): collision radius of the robot
+///		lidar_min_range (double): minimum object to lidar distance that is sensed
+///		lidar_max_range (double): maximum object to lidar distance that is sensed
+///		lidar_dtheta (double): angle increment of lidar scan in degrees
+///		lidar_n_samples (int): number of samples per lidar scan
+///		lidar_resolution (double): resolution of lidar distance measurements
+///		lidar_noise (double): Gaussian noise on the lidar distance measurements
+///		border_width (double): width of the simulated border
+///		border_height (double): height of the simulated border
 /// PUBLISHES:
 ///		visualization_marker_array (visualization_msgs/MarkerArray): true location of the tubes in the environment
 ///		real_path (nav_msgs/Path): trajectory of the robot
 ///		fake_sensor (visualization_msgs/MarkerArray): measured position of the tubes relative to the robot
 ///     joint_states (sensor_msgs/JointState): angles and angular velocities of left and right robot wheels
+///		laser_sim (sensor_msgs/LaserScan): simulated lidar data
+///		borders (visualization_msgs/Marker): simulated border lines
 /// SUBSCRIBES:
 ///     cmd_vel (geometry_msgs/Twist): input twist that causes motion of robot wheels
 
@@ -34,6 +44,7 @@
 #include <tf2_ros/transform_broadcaster.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <nav_msgs/Path.h>
+#include <sensor_msgs/LaserScan.h>
 #include <armadillo>
 #include <string>
 #include <random>
@@ -90,6 +101,8 @@ int main(int argc, char** argv)
 	ros::Publisher pub_tubes = n.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 1000, true);
 	ros::Publisher pub_path = n.advertise<nav_msgs::Path>("real_path", 1000);
 	ros::Publisher pub_sensor = n.advertise<visualization_msgs::MarkerArray>("fake_sensor", 1000);
+	ros::Publisher pub_laser = n.advertise<sensor_msgs::LaserScan>("laser_sim", 1000);
+	ros::Publisher pub_borders = n.advertise<visualization_msgs::Marker>("borders", 1000, true);
 	tf2_ros::TransformBroadcaster broadcaster;
 	ros::Subscriber sub = n.subscribe("cmd_vel", 1000, callback);
 	
@@ -114,6 +127,14 @@ int main(int argc, char** argv)
 	double d_max_tubes = 1.0;
 	double slip_max = 0.5;
 	double robot_radius = 0.1;
+	double lidar_min_range = 0.12;
+	double lidar_max_range = 3.5;
+	double lidar_dtheta = 1.0;
+	int lidar_n_samples = 360;
+	double lidar_resolution = 0.015;
+	double lidar_noise = 0.01;
+	double border_width = 4.0;
+	double border_height = 4.0;
 	n.getParam("x_tubes", x_tubes);
 	n.getParam("y_tubes", y_tubes);
 	n.getParam("tube_var", tube_var);
@@ -121,6 +142,14 @@ int main(int argc, char** argv)
 	n.getParam("d_max_tubes", d_max_tubes);
 	n.getParam("slip_max", slip_max);
 	n.getParam("robot_radius", robot_radius);
+	n.getParam("lidar_min_range", lidar_min_range);
+	n.getParam("lidar_max_range", lidar_max_range);
+	n.getParam("lidar_dtheta", lidar_dtheta);
+	n.getParam("lidar_n_samples", lidar_n_samples);
+	n.getParam("lidar_resolution", lidar_resolution);
+	n.getParam("lidar_noise", lidar_noise);
+	n.getParam("border_width", border_width);
+	n.getParam("border_height", border_height);
 	
 	// critical distance for collision
 	double d_crit = tube_radius + robot_radius;
@@ -151,7 +180,6 @@ int main(int argc, char** argv)
 	
 	// contains true position of the markers, expressed in terms of the world frame
 	visualization_msgs::MarkerArray real_marker_arr;
-	
 	for(std::size_t i = 0; i < x_tubes.size(); ++i)
 	{
 		visualization_msgs::Marker m;  // initialize marker to add to the array
@@ -182,13 +210,50 @@ int main(int argc, char** argv)
 	}
 	pub_tubes.publish(real_marker_arr);  // publish once MarkerArray
 	
+	// visualization for simulated borders
+	visualization_msgs::Marker brd;
+	brd.header.stamp = current_time;
+	brd.header.frame_id = "world";
+	brd.ns = "lines";
+	brd.id = 1;
+	brd.type = visualization_msgs::Marker::LINE_STRIP;
+	brd.action = visualization_msgs::Marker::ADD;
+	brd.scale.x = 0.05;
+	brd.color.r = 0.0;
+	brd.color.g = 0.0;
+	brd.color.b = 0.0;
+	brd.color.a = 1.0;
+	geometry_msgs::Point line_pt;
+	line_pt.x = -border_width/2;
+	line_pt.y = -border_height/2;
+	line_pt.z = 0.0;
+	brd.points.push_back(line_pt);
+	line_pt.x = border_width/2;
+	line_pt.y = -border_height/2;
+	line_pt.z = 0.0;		
+	brd.points.push_back(line_pt);
+	line_pt.x = border_width/2;
+	line_pt.y = border_height/2;
+	line_pt.z = 0.0;
+	brd.points.push_back(line_pt);
+	line_pt.x = -border_width/2;
+	line_pt.y = border_height/2;
+	line_pt.z = 0.0;
+	brd.points.push_back(line_pt);
+	line_pt.x = -border_width/2;
+	line_pt.y = -border_height/2;
+	line_pt.z = 0.0;
+	brd.points.push_back(line_pt);
+	pub_borders.publish(brd);
 	
 	// store robot xy position in a rigid transformation
 	Vector2D robot_pos(dd.getX(), dd.getY());
 	Transform2D t(robot_pos, dd.getTheta());
-	// find inverse of transformation
+	
+	sensor_msgs::LaserScan simulated_laser;
 
 	int count = 0;
+	int laser_count = 0;
 	while(n.ok())
 	{	
 		ros::spinOnce();
@@ -311,6 +376,27 @@ int main(int argc, char** argv)
 		else
 		{
 			++count;
+		}
+		
+		if (laser_count == 20)  // publish lidar measurements at 5 Hz
+		{
+			simulated_laser.header.stamp = current_time;
+			simulated_laser.header.frame_id = "turtle";
+			simulated_laser.angle_min = 0;
+			simulated_laser.angle_increment = deg2rad(lidar_dtheta);
+			simulated_laser.range_min = lidar_min_range;
+			simulated_laser.range_max = lidar_max_range;
+			simulated_laser.angle_max = deg2rad(lidar_dtheta)*(lidar_n_samples-1);
+			for (int i=0; i<lidar_n_samples; ++i)
+			{
+				simulated_laser.ranges.push_back(1.5);
+			}
+			pub_laser.publish(simulated_laser);
+			laser_count = 0;
+		}
+		else
+		{
+			++laser_count;
 		}
 		last_time = current_time;
 		r.sleep();

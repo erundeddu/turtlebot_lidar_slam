@@ -13,6 +13,14 @@
 	<param name="tube_radius" value="0.0762"/>
 	<param name="d_max_tubes" value="2.0"/>
 	<param name="robot_radius" value ="0.105"/>  
+	<param name="lidar_min_range" value="0.120"/>
+	<param name="lidar_max_range" value="3.5"/>
+	<param name="lidar_dtheta" value="1"/> <!-- in degrees -->
+	<param name="lidar_n_samples" value="360"/>
+	<param name="lidar_resolution" value="0.015"/>
+	<param name="lidar_noise" value="0.01"/>
+	<param name="border_width" value="4"/>
+	<param name="border_height" value="4"/>
 	<rosparam command="load" file="$(find nuturtle_description)/config/diff_params.yaml" />
 	
 	<node pkg="turtlebot3_teleop" type="turtlebot3_teleop_key" name="turtlebot3_teleop_keyboard" output="screen"/>
