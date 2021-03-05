@@ -8,6 +8,7 @@ namespace circles
 	{
 		using namespace rigid2d;
 		// make p1, p2 relative to the center of the circle
+		Vector2D p1_p2(p2.x-p1.x, p2.y-p1.y);
 		p1.x -= p_circle.x;
 		p2.x -= p_circle.x;
 		p1.y -= p_circle.y;
@@ -27,27 +28,35 @@ namespace circles
 		}
 		else
 		{	
-			i1.is_intersection = true;
-			i2.is_intersection = true;
 			i1.x = (D*dy+sgn(dy)*dx*sqrt(discriminant))/(dr*dr);
 			i2.x = (D*dy-sgn(dy)*dx*sqrt(discriminant))/(dr*dr);
 			i1.y = (-D*dx+std::abs(dy)*sqrt(discriminant))/(dr*dr);
 			i2.y = (-D*dx-std::abs(dy)*sqrt(discriminant))/(dr*dr);
-			Vector2D p1_i1(p1.x-i1.x, p1.y-i1.y);
-			Vector2D p1_i2(p1.x-i2.x, p1.y-i2.y);
-			if (magnitude(p1_i1) < magnitude(p1_i2))
+			Vector2D p1_i1(i1.x-p1.x, i1.y-p1.y);
+			Vector2D p1_i2(i1.x-p2.x, i1.y-p2.y);
+			if ((p1_i1.x*p1_p2.x + p1_i1.y*p1_p2.y) < 0)  // dot product to screen out antiparallel cases (symmetry of PI)
 			{
-				// translate the intersection point back to the world frame
-				i1.x += p_circle.x;
-				i1.y += p_circle.y;
+				i1.is_intersection = false;
 				return i1;
 			}
 			else
 			{
-				// translate the intersection point back to the world frame
-				i2.x += p_circle.x;
-				i2.y += p_circle.y;
-				return i2;
+				i1.is_intersection = true;
+				i2.is_intersection = true;
+				if (magnitude(p1_i1) < magnitude(p1_i2))
+				{
+					// translate the intersection point back to the world frame
+					i1.x += p_circle.x;
+					i1.y += p_circle.y;
+					return i1;
+				}
+				else
+				{
+					// translate the intersection point back to the world frame
+					i2.x += p_circle.x;
+					i2.y += p_circle.y;
+					return i2;
+				}
 			}
 		}
 	}

@@ -438,7 +438,7 @@ int main(int argc, char** argv)
 						else
 						{
 							Vector2D p1_i_new(p1.x-it_temp.x, p1.y-it_temp.y);
-							if (magnitude(p1_i_new) < range)
+							if (magnitude(p1_i_new) < range)  // lidar only sees the closest object
 							{
 								it = it_temp;
 								range = magnitude(p1_i_new);
@@ -446,6 +446,8 @@ int main(int argc, char** argv)
 						}
 					}
 				}
+				int num_resolutions = range/lidar_resolution;  // convert simulated data according to lidar resolution
+				range = num_resolutions * lidar_resolution;
 				simulated_laser.ranges.push_back(range);
 			}
 			pub_laser.publish(simulated_laser);

@@ -23,7 +23,7 @@ namespace circles
 	/// \param p2 - the second point defining the line
 	/// \param p_circle - the center of the circle
 	/// \param radius - the radius of the circle
-	/// \return whether the circle intersects the line p1-p2, and, if so, the intersection point closest to p1
+	/// \return whether the circle intersects the line p1-p2, and, if so, the intersection point closest to p1 in the direction p1-p2
 	Intersection compute_intersection(rigid2d::Vector2D p1, rigid2d::Vector2D p2, rigid2d::Vector2D p_circle, double radius);
 	
 	/// \brief returns sign (+1/-1) of a number
