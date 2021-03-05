@@ -49,9 +49,11 @@
 #include <string>
 #include <random>
 #include <vector>
+#include <cmath>
 #include "rigid2d/rigid2d.hpp"
 #include "rigid2d/diff_drive.hpp"
 #include "nurtlesim/multivariate.hpp"
+#include "nurtlesim/circles.hpp"
 
 static rigid2d::DiffDrive dd;	
 static rigid2d::WheelVel wv;
@@ -93,6 +95,7 @@ void callback(const geometry_msgs::Twist::ConstPtr & msg)
 int main(int argc, char** argv)
 {
 	using namespace rigid2d;
+	using namespace circles;
 	
 	ros::init(argc, argv, "tube_world");
 	ros::NodeHandle n;
@@ -218,6 +221,10 @@ int main(int argc, char** argv)
 	brd.id = 1;
 	brd.type = visualization_msgs::Marker::LINE_STRIP;
 	brd.action = visualization_msgs::Marker::ADD;
+	brd.pose.orientation.x = 0.0;
+	brd.pose.orientation.y = 0.0;
+	brd.pose.orientation.z = 0.0;
+	brd.pose.orientation.w = 1.0;
 	brd.scale.x = 0.05;
 	brd.color.r = 0.0;
 	brd.color.g = 0.0;
@@ -249,8 +256,8 @@ int main(int argc, char** argv)
 	// store robot xy position in a rigid transformation
 	Vector2D robot_pos(dd.getX(), dd.getY());
 	Transform2D t(robot_pos, dd.getTheta());
-	
-	sensor_msgs::LaserScan simulated_laser;
+
+	double alpha = atan(border_height/border_width);
 
 	int count = 0;
 	int laser_count = 0;
@@ -380,6 +387,7 @@ int main(int argc, char** argv)
 		
 		if (laser_count == 20)  // publish lidar measurements at 5 Hz
 		{
+			sensor_msgs::LaserScan simulated_laser;
 			simulated_laser.header.stamp = current_time;
 			simulated_laser.header.frame_id = "turtle";
 			simulated_laser.angle_min = 0;
@@ -389,7 +397,56 @@ int main(int argc, char** argv)
 			simulated_laser.angle_max = deg2rad(lidar_dtheta)*(lidar_n_samples-1);
 			for (int i=0; i<lidar_n_samples; ++i)
 			{
-				simulated_laser.ranges.push_back(1.5);
+				double relative_scan_angle = i*simulated_laser.angle_increment; // current lidar angle in robot frame
+				double absolute_scan_angle = normalize_angle(relative_scan_angle + dd.getTheta());  // current lidar angle in world frame
+				Vector2D p1(dd.getX(), dd.getY());  // robot xy coords wrt world frame
+				Vector2D p2;  // point on the border coords wrt world frame
+				if ((absolute_scan_angle >= -alpha) && (absolute_scan_angle <= alpha))  // west wall
+				{
+					p2.x = border_width/2;
+					p2.y = p1.y + tan(absolute_scan_angle)*(p2.x - p1.x);
+				}
+				else if ((absolute_scan_angle > alpha) && (absolute_scan_angle < PI-alpha)) // north wall
+				{
+					p2.y = border_height/2;
+					p2.x = p1.x + (p2.y - p1.y)/tan(absolute_scan_angle);					
+				}
+				else if ((absolute_scan_angle >= PI-alpha) || (absolute_scan_angle <= -PI+alpha)) // east wall
+				{
+					p2.x = -border_width/2;
+					p2.y = p1.y + tan(absolute_scan_angle)*(p2.x - p1.x);
+				}
+				else if ((absolute_scan_angle > -PI+alpha) && (absolute_scan_angle < -alpha)) // south wall
+				{
+					p2.y = -border_height/2;
+					p2.x = p1.x + (p2.y - p1.y)/tan(absolute_scan_angle);
+				}
+				double range = magnitude(p1-p2);
+				Intersection it;
+				for(std::size_t i = 0; i < x_tubes.size(); ++i)
+				{
+					Vector2D p_circle(x_tubes[i], y_tubes[i]);
+					Intersection it_temp = compute_intersection(p1, p2, p_circle, tube_radius);
+					if (it_temp.is_intersection)
+					{
+						if (!it.is_intersection)
+						{
+							Vector2D p1_i_new(p1.x-it_temp.x, p1.y-it_temp.y);
+							range = magnitude(p1_i_new);
+							it = it_temp;
+						}
+						else
+						{
+							Vector2D p1_i_new(p1.x-it_temp.x, p1.y-it_temp.y);
+							if (magnitude(p1_i_new) < range)
+							{
+								it = it_temp;
+								range = magnitude(p1_i_new);
+							}
+						}
+					}
+				}
+				simulated_laser.ranges.push_back(range);
 			}
 			pub_laser.publish(simulated_laser);
 			laser_count = 0;
