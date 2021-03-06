@@ -4,6 +4,7 @@
 /// \brief functions to process laser data and fit circles through unsupervised and supervised learning
 
 #include <vector>
+#include "rigid2d/rigid2d.hpp"
 
 namespace nuslam
 {
@@ -33,6 +34,13 @@ namespace nuslam
 	/// \param v - a vector of float
 	/// \return standard deviation of v
 	float stdev(std::vector<float> & v);
+	
+	/// \brief converts range data in a cluster into relative xy coordinates
+	/// \param ranges - array of range data
+	/// \param cluster - array of indices relative to range data
+	/// \param dtheta - angular increment between adjacent measurements
+	/// \return vector of Vector2D representing relative xy coordinates of data points
+	std::vector<rigid2d::Vector2D> range2xy(std::vector<float> & ranges, std::vector<int> & cluster, double dtheta);
 }
 
 #endif

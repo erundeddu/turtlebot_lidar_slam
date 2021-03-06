@@ -52,6 +52,7 @@ int main(int argc, char** argv)
 			{
 				if (is_circle(scan.ranges, clusters[i], scan.angle_increment, min_mean, max_mean, max_std))
 				{
+					//TODO
 					//fit
 					//publish
 				}

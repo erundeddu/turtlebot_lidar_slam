@@ -106,4 +106,16 @@ namespace nuslam
 		}
 		return (sqrt(ssq)/(v.size()-1));
 	}
+	
+	std::vector<rigid2d::Vector2D> range2xy(std::vector<float> & ranges, std::vector<int> & cluster, double dtheta)
+	{
+		using namespace rigid2d;
+		std::vector<rigid2d::Vector2D> v_xy;
+		for (std::size_t i=0; i<cluster.size(); ++i)
+		{
+			Vector2D v(ranges[i]*cos(dtheta*i), ranges[i]*sin(dtheta*i));
+			v_xy.push_back(v);
+		}
+		return v_xy;
+	}
 }
