@@ -12,7 +12,7 @@ namespace nuslam
 	/// \param thresh - threshold above which adjacent range data belong to different clusters
 	/// \param min_n - minimum number of data points in a cluster to be retained
 	/// \return a vector of vectors, where each vector represents a different cluster and contains the indices of the range data array belonging to the cluster
-	std::vector<std::vector<double>> cluster_ranges(double ranges[], double thresh, int min_n);
+	std::vector<std::vector<int>> cluster_ranges(std::vector<float> ranges, double thresh, int min_n);
 }
 
 #endif

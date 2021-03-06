@@ -139,6 +139,7 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(slam src/helper.cpp src/slam.cpp)
+add_executable(landmarks src/circle_learning.cpp src/landmarks.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -149,9 +150,14 @@ add_executable(slam src/helper.cpp src/slam.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(slam ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(landmarks ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(slam
+  ${catkin_LIBRARIES}
+  ${ARMADILLO_LIBRARIES}
+)
+target_link_libraries(landmarks
   ${catkin_LIBRARIES}
   ${ARMADILLO_LIBRARIES}
 )
@@ -173,6 +179,9 @@ target_link_libraries(slam
 ## Mark executables for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
 install(TARGETS slam
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+install(TARGETS landmarks
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
