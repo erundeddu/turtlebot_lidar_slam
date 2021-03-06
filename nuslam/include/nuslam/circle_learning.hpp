@@ -22,7 +22,7 @@ namespace nuslam
 	/// \param max_mean - maximum value of angle mean (in radians) for Circle
 	/// \param max_std - maximum value of angle standard deviation (in radians) for Circle
 	/// \return true if Circle, false if Not Circle
-	bool is_circle(std::vector<float> & ranges, std::vector<int> & cluster, double dtheta, double min_mean, double max_mean, double max_std);
+	bool is_circle(std::vector<float> & ranges, std::vector<int> & cluster, double dtheta, float min_mean, float max_mean, float max_std);
 	
 	/// \brief computes the mean of a vector of float
 	/// \param v - a vector of float

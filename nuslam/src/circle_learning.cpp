@@ -56,25 +56,34 @@ namespace nuslam
 		return clusters_list;
 	}
 	
-	bool is_circle(std::vector<float> & ranges, std::vector<int> & cluster, double dtheta, double min_mean, double max_mean, double max_std)
+	bool is_circle(std::vector<float> & ranges, std::vector<int> & cluster, double dtheta, float min_mean, float max_mean, float max_std)
 	{
 		using namespace rigid2d;
 		
-		double r1 = ranges[cluster[0]];  // first range
-		double r2 = ranges[cluster.back()];  // last range
+		float r1 = ranges[cluster[0]];  // first range
+		float r2 = ranges[cluster.back()];  // last range
 		int n_data = cluster.size();
 		Vector2D p1(r1, 0);  // first point (in relative reference frame)
 		Vector2D p2(r2*cos(dtheta*(n_data-1)), r2*sin(dtheta*(n_data-1)));  // last point (in relative reference frame)
-		std::vector<double> angles;
+		std::vector<float> angles;
 		for (int i=1; i<(n_data-2); ++i)
 		{
-			double ri = ranges[cluster[i]];
+			float ri = ranges[cluster[i]];
 			Vector2D pi(ri*cos(dtheta*i), ri*sin(dtheta*i));
 			Vector2D i1 = p1 - pi;
 			Vector2D i2 = p2 - pi;
 			angles.push_back(normalize_angular_difference(angle(i2), angle(i1)));
 		}
-		
+		float angle_avg = mean(angles);
+		float angle_std = stdev(angles);
+		if ((angle_std <= max_std) && (angle_avg >= min_mean) && (angle_avg <= max_mean))
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}	
 	
 	float mean(std::vector<float> & v)
