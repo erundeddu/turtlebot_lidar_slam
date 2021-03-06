@@ -45,6 +45,7 @@ int main(int argc, char** argv)
 	
 	while(n.ok())
 	{	
+		std::vector<Circle> circles;
 		if (is_received)
 		{
 			clusters = cluster_ranges(scan.ranges, thresh, min_n);
@@ -52,11 +53,12 @@ int main(int argc, char** argv)
 			{
 				if (is_circle(scan.ranges, clusters[i], scan.angle_increment, min_mean, max_mean, max_std))
 				{
-					//TODO
-					//fit
-					//publish
+					std::vector<Vector2D> pts = range2xy(scan.ranges, clusters[i], scan.angle_increment);
+					Circle c = fit_circle(pts);
+					circles.push_back(c);
 				}
 			}
+			//TODO publish circles as markers
 		}
 		r.sleep();
 	}
