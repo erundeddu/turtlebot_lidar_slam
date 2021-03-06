@@ -125,18 +125,19 @@ namespace nuslam
 	Circle fit_circle(const std::vector<rigid2d::Vector2D> & pts)
 	{
 		using namespace rigid2d;
+		std::size_t n = pts.size();
 		
 		Vector2D avg_pt;
-		for (std::size_t i=0; i<pts.size(); ++i)
+		for (std::size_t i=0; i<n; ++i)
 		{
 			avg_pt += pts[i];
 		}
-		avg_pt *= (1.0/pts.size());
+		avg_pt *= (1.0/n);
 		
 		std::vector<double> x;
 		std::vector<double> y;
 		std::vector<double> z;
-		for (std::size_t i=0; i<pts.size(); ++i)
+		for (std::size_t i=0; i<n; ++i)
 		{
 			double xi = pts[i].x-avg_pt.x;
 			double yi = pts[i].y-avg_pt.y;
@@ -150,6 +151,16 @@ namespace nuslam
 		arma::Col<double> xcol(x);
 		arma::Col<double> ycol(y);
 		arma::Col<double> zcol(z);
-		arma::Mat<double> Z = arma::join_rows(zcol,xcol,ycol,arma::ones(pts.size(),1));
+		arma::Mat<double> Z = arma::join_rows(zcol,xcol,ycol,arma::ones(n,1));
+		arma::Mat<double> M = (1/n)*Z.t()*Z;
+		arma::Mat<double> H = {	{8*z_avg, 0, 0, 2},
+								{0,	1, 0, 0},
+								{0, 0, 1, 0},
+								{2, 0, 0, 0}};
+		arma::Mat<double> Hinv = {	{0, 0, 0, 0.5},
+									{0, 1, 0, 0},
+									{0, 0, 1, 0},
+									{0.5, 0, 0, -2*z_avg}};
+		//TODO continue
 	}
 }
