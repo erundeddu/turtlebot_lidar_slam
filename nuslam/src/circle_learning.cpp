@@ -161,6 +161,45 @@ namespace nuslam
 									{0, 1, 0, 0},
 									{0, 0, 1, 0},
 									{0.5, 0, 0, -2*z_avg}};
-		//TODO continue
+		arma::Mat<double> U;
+		arma::Mat<double> V;
+		arma::Col<double> s;
+		arma::svd(U,s,V,Z);
+		arma::Mat<double> A;
+		if (s(4,4) > 1.0e-12)
+		{
+			arma::Mat<double> Y = V*arma::diagmat(s)*V.t();
+			arma::Mat<double> Q = Y*Hinv*Y;
+			arma::Col<std::complex<double>> eigval;
+			arma::Mat<std::complex<double>> eigvec;
+			arma::eig_gen(eigval, eigvec, Q);
+			int min_eig_ind = 0;
+			float min_eig = std::real(eigval(0));
+			for (int i=1; i<(int)n; ++i)
+			{
+				float current_eig = std::real(eigval(i));
+				if ((current_eig < min_eig) && (current_eig > 0))
+				{
+					min_eig = current_eig;
+					min_eig_ind = i;
+				}
+			}
+			arma::Col<std::complex<double>> Astar_c = eigvec.col(min_eig_ind);
+			arma::Col<double> Astar(n);
+			for (int i=0; i<(int)n; ++i)
+			{
+				Astar(i) = std::real(Astar_c(i));
+			}
+			A = arma::inv(Y)*Astar;
+		}
+		else
+		{
+			A = V.col(3);
+		}
+		Circle c;
+		c.x = -A(1)/(2*A(0)) + avg_pt.x;
+		c.y = -A(2)/(2*A(0)) + avg_pt.y;
+		c.r = (A(1)*A(1) + A(2)*A(2) - 4*(A(0)*A(3)))/(4*A(0)*A(0));
+		return c;
 	}
 }
