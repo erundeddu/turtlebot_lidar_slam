@@ -27,7 +27,7 @@
 ///		real_path (nav_msgs/Path): trajectory of the robot
 ///		fake_sensor (visualization_msgs/MarkerArray): measured position of the tubes relative to the robot
 ///     joint_states (sensor_msgs/JointState): angles and angular velocities of left and right robot wheels
-///		laser_sim (sensor_msgs/LaserScan): simulated lidar data
+///		scan (sensor_msgs/LaserScan): simulated lidar data
 ///		borders (visualization_msgs/Marker): simulated border lines
 /// SUBSCRIBES:
 ///     cmd_vel (geometry_msgs/Twist): input twist that causes motion of robot wheels
@@ -104,7 +104,7 @@ int main(int argc, char** argv)
 	ros::Publisher pub_tubes = n.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 1000, true);
 	ros::Publisher pub_path = n.advertise<nav_msgs::Path>("real_path", 1000);
 	ros::Publisher pub_sensor = n.advertise<visualization_msgs::MarkerArray>("fake_sensor", 1000);
-	ros::Publisher pub_laser = n.advertise<sensor_msgs::LaserScan>("laser_sim", 1000);
+	ros::Publisher pub_laser = n.advertise<sensor_msgs::LaserScan>("scan", 1000);
 	ros::Publisher pub_borders = n.advertise<visualization_msgs::Marker>("borders", 1000, true);
 	tf2_ros::TransformBroadcaster broadcaster;
 	ros::Subscriber sub = n.subscribe("cmd_vel", 1000, callback);
