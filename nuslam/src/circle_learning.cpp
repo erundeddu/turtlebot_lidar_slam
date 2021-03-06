@@ -1,10 +1,11 @@
 #include "nuslam/circle_learning.hpp"
+#include "rigid2d/rigid2d.hpp"
 #include <vector>
 #include <cmath>
 
 namespace nuslam 
 {	
-	std::vector<std::vector<int>> cluster_ranges(std::vector<float> ranges, double thresh, int min_n)
+	std::vector<std::vector<int>> cluster_ranges(std::vector<float> & ranges, double thresh, int min_n)
 	{
 		std::vector<std::vector<int>> clusters_list;
 		std::vector<int> cluster;
@@ -53,5 +54,47 @@ namespace nuslam
 			}
 		}
 		return clusters_list;
+	}
+	
+	bool is_circle(std::vector<float> & ranges, std::vector<int> & cluster, double dtheta, double min_mean, double max_mean, double max_std)
+	{
+		using namespace rigid2d;
+		
+		double r1 = ranges[cluster[0]];  // first range
+		double r2 = ranges[cluster.back()];  // last range
+		int n_data = cluster.size();
+		Vector2D p1(r1, 0);  // first point (in relative reference frame)
+		Vector2D p2(r2*cos(dtheta*(n_data-1)), r2*sin(dtheta*(n_data-1)));  // last point (in relative reference frame)
+		std::vector<double> angles;
+		for (int i=1; i<(n_data-2); ++i)
+		{
+			double ri = ranges[cluster[i]];
+			Vector2D pi(ri*cos(dtheta*i), ri*sin(dtheta*i));
+			Vector2D i1 = p1 - pi;
+			Vector2D i2 = p2 - pi;
+			angles.push_back(normalize_angular_difference(angle(i2), angle(i1)));
+		}
+		
 	}	
+	
+	float mean(std::vector<float> & v)
+	{
+		float sum = 0.0;
+		for (std::size_t i=0; i<v.size(); ++i)
+		{
+			sum += v[i];
+		}
+		return (sum/v.size());
+	}
+	
+	float stdev(std::vector<float> & v)
+	{
+		float avg = mean(v);
+		float ssq = 0.0;
+		for (std::size_t i=0; i<v.size(); ++i)
+		{
+			ssq += ((v[i] - avg)*(v[i] - avg));
+		}
+		return (sqrt(ssq)/(v.size()-1));
+	}
 }

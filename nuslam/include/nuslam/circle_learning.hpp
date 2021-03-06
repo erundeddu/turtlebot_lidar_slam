@@ -12,7 +12,27 @@ namespace nuslam
 	/// \param thresh - threshold above which adjacent range data belong to different clusters
 	/// \param min_n - minimum number of data points in a cluster to be retained
 	/// \return a vector of vectors, where each vector represents a different cluster and contains the indices of the range data array belonging to the cluster
-	std::vector<std::vector<int>> cluster_ranges(std::vector<float> ranges, double thresh, int min_n);
+	std::vector<std::vector<int>> cluster_ranges(std::vector<float> & ranges, double thresh, int min_n);
+	
+	/// \brief classifies a cluster of points into Circle or Not Circle
+	/// \param ranges - array of range data
+	/// \param cluster - array of indices relative to range data
+	/// \param dtheta - angular increment between adjacent measurements
+	/// \param min_mean - minimum value of angle mean (in radians) for Circle
+	/// \param max_mean - maximum value of angle mean (in radians) for Circle
+	/// \param max_std - maximum value of angle standard deviation (in radians) for Circle
+	/// \return true if Circle, false if Not Circle
+	bool is_circle(std::vector<float> & ranges, std::vector<int> & cluster, double dtheta, double min_mean, double max_mean, double max_std);
+	
+	/// \brief computes the mean of a vector of float
+	/// \param v - a vector of float
+	/// \return mean of v
+	float mean(std::vector<float> & v);
+	
+	/// \brief computes the standard deviation of a vector of float
+	/// \param v - a vector of float
+	/// \return standard deviation of v
+	float stdev(std::vector<float> & v);
 }
 
 #endif
