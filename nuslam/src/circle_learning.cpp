@@ -3,6 +3,7 @@
 #include <vector>
 #include <cmath>
 #include <armadillo>
+#include <iostream>  //TODO for testing
 
 namespace nuslam 
 {	
@@ -166,7 +167,7 @@ namespace nuslam
 		arma::Col<double> s;
 		arma::svd(U,s,V,Z);
 		arma::Mat<double> A;
-		if (s(4,4) > 1.0e-12)
+		if (s(3) > 1.0e-12)
 		{
 			arma::Mat<double> Y = V*arma::diagmat(s)*V.t();
 			arma::Mat<double> Q = Y*Hinv*Y;
@@ -175,7 +176,7 @@ namespace nuslam
 			arma::eig_gen(eigval, eigvec, Q);
 			int min_eig_ind = 0;
 			float min_eig = std::real(eigval(0));
-			for (int i=1; i<(int)n; ++i)
+			for (int i=1; i<(int)eigval.size(); ++i)
 			{
 				float current_eig = std::real(eigval(i));
 				if ((current_eig < min_eig) && (current_eig > 0))
@@ -185,8 +186,8 @@ namespace nuslam
 				}
 			}
 			arma::Col<std::complex<double>> Astar_c = eigvec.col(min_eig_ind);
-			arma::Col<double> Astar(n);
-			for (int i=0; i<(int)n; ++i)
+			arma::Col<double> Astar((int)Astar_c.size());
+			for (int i=0; i<(int)Astar_c.size(); ++i)
 			{
 				Astar(i) = std::real(Astar_c(i));
 			}
@@ -194,8 +195,10 @@ namespace nuslam
 		}
 		else
 		{
+			std::cout << "1b";
 			A = V.col(3);
 		}
+		std::cout << "10";
 		Circle c;
 		c.x = -A(1)/(2*A(0)) + avg_pt.x;
 		c.y = -A(2)/(2*A(0)) + avg_pt.y;

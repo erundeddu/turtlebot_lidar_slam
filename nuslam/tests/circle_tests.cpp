@@ -9,7 +9,7 @@ TEST_CASE("circle fitting algorithm results", "[circle_fit]")
 	
 	Vector2D p1(1,7);
 	Vector2D p2(2,6);
-	Vector2D p3(5,8):
+	Vector2D p3(5,8);
 	Vector2D p4(7,7);
 	Vector2D p5(9,5);
 	Vector2D p6(3,7);

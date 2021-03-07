@@ -10,7 +10,7 @@ add_compile_options(-Wall -Wextra)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS geometry_msgs nav_msgs nurtlesim rigid2d roscpp sensor_msgs tf2 tf2_ros visualization_msgs)
+find_package(catkin REQUIRED COMPONENTS catch_ros geometry_msgs nav_msgs nurtlesim rigid2d roscpp sensor_msgs tf2 tf2_ros visualization_msgs)
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
@@ -109,8 +109,8 @@ endif()
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
    INCLUDE_DIRS include
-#  LIBRARIES nuslam
-   CATKIN_DEPENDS geometry_msgs nav_msgs nurtlesim rigid2d roscpp sensor_msgs tf2 tf2_ros visualization_msgs
+   LIBRARIES ${PROJECT_NAME}
+   CATKIN_DEPENDS catch_ros geometry_msgs nav_msgs nurtlesim rigid2d roscpp sensor_msgs tf2 tf2_ros visualization_msgs
 #  DEPENDS system_lib
 )
 
@@ -126,14 +126,15 @@ include_directories(
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/nuslam.cpp
-# )
+add_library(${PROJECT_NAME}
+  src/circle_learning.cpp
+  src/helper.cpp
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
@@ -154,10 +155,20 @@ add_dependencies(landmarks ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(slam
+  ${PROJECT_NAME}
   ${catkin_LIBRARIES}
   ${ARMADILLO_LIBRARIES}
 )
 target_link_libraries(landmarks
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+  ${ARMADILLO_LIBRARIES}
+)
+
+catch_add_test(${PROJECT_NAME}_tests tests/circle_tests.cpp)
+
+target_link_libraries(${PROJECT_NAME}_tests
+  ${PROJECT_NAME}
   ${catkin_LIBRARIES}
   ${ARMADILLO_LIBRARIES}
 )
@@ -187,17 +198,15 @@ install(TARGETS landmarks
 
 ## Mark libraries for installation
 ## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_libraries.html
-# install(TARGETS ${PROJECT_NAME}
-#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-#   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
-# )
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
 
 ## Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.h"
-  PATTERN ".svn" EXCLUDE
 )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
