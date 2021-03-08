@@ -3,7 +3,6 @@
 #include <vector>
 #include <cmath>
 #include <armadillo>
-#include <iostream>  //TODO for testing
 
 namespace nuslam 
 {	
@@ -153,7 +152,7 @@ namespace nuslam
 		arma::Col<double> ycol(y);
 		arma::Col<double> zcol(z);
 		arma::Mat<double> Z = arma::join_rows(zcol,xcol,ycol,arma::ones(n,1));
-		arma::Mat<double> M = (1/n)*Z.t()*Z;
+		arma::Mat<double> M = (1.0/n)*Z.t()*Z;
 		arma::Mat<double> H = {	{8*z_avg, 0, 0, 2},
 								{0,	1, 0, 0},
 								{0, 0, 1, 0},
@@ -175,8 +174,8 @@ namespace nuslam
 			arma::Mat<std::complex<double>> eigvec;
 			arma::eig_gen(eigval, eigvec, Q);
 			int min_eig_ind = 0;
-			float min_eig = std::real(eigval(0));
-			for (int i=1; i<(int)eigval.size(); ++i)
+			float min_eig = 100000;
+			for (int i=0; i<(int)eigval.size(); ++i)
 			{
 				float current_eig = std::real(eigval(i));
 				if ((current_eig < min_eig) && (current_eig > 0))
@@ -195,14 +194,12 @@ namespace nuslam
 		}
 		else
 		{
-			std::cout << "1b";
 			A = V.col(3);
 		}
-		std::cout << "10";
 		Circle c;
 		c.x = -A(1)/(2*A(0)) + avg_pt.x;
 		c.y = -A(2)/(2*A(0)) + avg_pt.y;
-		c.r = (A(1)*A(1) + A(2)*A(2) - 4*(A(0)*A(3)))/(4*A(0)*A(0));
+		c.r = sqrt((A(1)*A(1) + A(2)*A(2) - 4*(A(0)*A(3)))/(4*A(0)*A(0)));
 		return c;
 	}
 }
