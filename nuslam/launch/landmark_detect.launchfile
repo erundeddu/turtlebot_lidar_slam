@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+	<arg name="simulate" default="true" doc="true: launch simulator and landmark detection on localhost, false: launch landmark detection on the turtlebot"/>
+	
+
+</launch>

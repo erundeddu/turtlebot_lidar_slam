@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 			{
 				visualization_msgs::Marker m;
 				m.header.stamp = current_time;
-				m.header.frame_id = "map";  // relative to the map frame
+				m.header.frame_id = "turtle";  // relative to the robot frame
 				m.ns = "circles";
 				m.id = i+1;  // unique id under namespace
 				m.type = visualization_msgs::Marker::CYLINDER;

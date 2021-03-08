@@ -113,10 +113,10 @@ namespace nuslam
 	std::vector<rigid2d::Vector2D> range2xy(const std::vector<float> & ranges, const std::vector<int> & cluster, double dtheta)
 	{
 		using namespace rigid2d;
-		std::vector<rigid2d::Vector2D> v_xy;
+		std::vector<Vector2D> v_xy;
 		for (std::size_t i=0; i<cluster.size(); ++i)
 		{
-			Vector2D v(ranges[i]*cos(dtheta*i), ranges[i]*sin(dtheta*i));
+			Vector2D v(ranges[cluster[i]]*cos(dtheta*cluster[i]), ranges[cluster[i]]*sin(dtheta*cluster[i]));
 			v_xy.push_back(v);
 		}
 		return v_xy;

@@ -7,7 +7,8 @@ Panels:
         - /Global Options1
         - /Status1
         - /MarkerArray1
-        - /LaserScan1
+        - /MarkerArray2
+        - /MarkerArray2/Status1
       Splitter Ratio: 0.5
     Tree Height: 385
   - Class: rviz/Selection
@@ -145,6 +146,14 @@ Visualization Manager:
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /circles_detected
+      Name: MarkerArray
+      Namespaces:
+        circles: true
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -173,7 +182,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 5.884309768676758
+      Distance: 10.77285099029541
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
