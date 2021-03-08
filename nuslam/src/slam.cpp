@@ -10,6 +10,7 @@
 ///		body_frame_id (string): the name of the body tf frame
 ///		q_cov (std::vector<double>): covariance matrix for odometry process noise
 ///		r_cov (std::vector<double>): covariance matrix for sensor noise
+///		unknown_assoc (int): if true (1), subscribe to circles_detected and perform unknwon data association. if false (0) subscribe to fake_sensor and use landmark id's
 /// PUBLISHES:
 ///     odom (nav_msgs/Odometry): robot pose in the odom_frame_id frame, robot body velocity in body_frame_id
 ///		odom_path (nav_msgs/Path): robot path according to odometry only
@@ -18,6 +19,7 @@
 /// SUBSCRIBES:
 ///     joint_states (sensor_msgs/JointState): angles and angular velocities of left and right robot wheels
 ///	    fake_sensor (visualization_msgs/MarkerArray): landmarks seen by the robot
+///		circles_detected (visualization_msgs/MarkerArray): landmarks extracted from laser data
 /// SERVICES:
 ///		set_pose (rigid2d/set_pose): provides a new pose to change where the robot think it is
 
@@ -60,6 +62,8 @@ static rigid2d::Transform2D t_ob;  // odom to base_footprint transform
 static arma::Mat<double> S;
 static arma::Mat<double> R;
 static arma::Mat<double> Q_bar;
+
+static int unknown_assoc = 0;
 
 
 /// \brief Updates internal odometry state, publishes a ROS odometry message, broadcast the transform between odometry and body frame on tf
@@ -238,9 +242,8 @@ int main(int argc, char** argv)
 	ros::init(argc, argv, "slam");
 	ros::NodeHandle n;
 	ros::Rate r(100);
-	ros::Subscriber sub = n.subscribe("joint_states", 1000, callback);
-	ros::Subscriber sub_mark = n.subscribe("fake_sensor", 1000, markers_callback);
-	
+	ros::Subscriber sub = n.subscribe("joint_states", 1000, callback);	
+	ros::Subscriber sub_mark;
 	ros::Publisher pub_odom = n.advertise<nav_msgs::Path>("odom_path", 1000);
 	ros::Publisher pub_slam = n.advertise<nav_msgs::Path>("slam_path", 1000);
 	ros::Publisher pub_mark = n.advertise<visualization_msgs::MarkerArray>("slam_map", 1000);
@@ -265,6 +268,16 @@ int main(int argc, char** argv)
 	n.getParam("right_wheel_joint", right_wheel_joint);
 	n.getParam("q_cov", q_cov);
 	n.getParam("r_cov", r_cov);
+	n.getParam("unknown_assoc", unknown_assoc);
+	
+	if (unknown_assoc)
+	{
+		sub_mark = n.subscribe("circles_detected", 1000, markers_callback);
+	}
+	else
+	{
+		sub_mark = n.subscribe("fake_sensor", 1000, markers_callback);
+	}
 	
 	odom.header.frame_id = odom_frame_id;
 	odom.child_frame_id = body_frame_id;
