@@ -1,8 +1,9 @@
-# Feature-Based Kalman Filter SLAM
+# Feature-Based Kalman Filter SLAM and Feature Detection through Circle regression
 * Implementation of the Feature-Based Kalman Filter SLAM
 * Visualization of SLAM estimated robot trajectory (blue) and odometry-only trajectory (red) in rviz
 * Visualization of SLAM estimated landmarks (blue) in rviz
 * Compatible with nurtlesim simulation or with real turtlebot
+* Detection of obstacle tubes from radar scan data through regression
 # Example Usage
 ```
 roslaunch nuslam slam.launch robot:=localhost
@@ -19,3 +20,8 @@ roslaunch nuslam slam.launch robot:=localhost
 
 ![Collision simulation](images/sim2.png)
 * Shows approximately matching real path and SLAM path at the beginning of the simulation, while the odometry path is different due to the robot wheels moving during the collision
+
+```
+roslaunch nuslam landmark_detect.launch robot:=localhost
+```
+
