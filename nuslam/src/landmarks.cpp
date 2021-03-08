@@ -1,6 +1,14 @@
 /// \file
 /// \brief node to detect landmarks and publish their relative locations
 ///
+/// PARAMETERS:
+/// 	min_cluster_n (int): minimum number of elements in a cluster
+/// 	min_angle_mean (double): minimum angle mean for circle (degrees)
+///		max_angle_mean (double): maximum angle mean for circle (degrees)
+///		max_angle_std (double): maximum angle standard deviation for circle (radians)
+///		d_thresh (double): measurement distance threshold for clustering (m)
+///		min_circle_radius (double): minimum radius for circle (m)
+///		max_circle_radius (double): maximum radius for circle (m)
 /// PUBLISHES:
 ///     circles_detected (visualization_msgs/MarkerArray): circles detected from laser data
 /// SUBSCRIBES:
@@ -36,14 +44,28 @@ int main(int argc, char** argv)
 	ros::Subscriber sub = n.subscribe("scan", 1000, callback);
 	ros::Publisher pub = n.advertise<visualization_msgs::MarkerArray>("circles_detected", 1000);
 	
-	double thresh = 0.3;  // distance threshold for clustering
-	int min_n = 3;  // minimum number of elements in a cluster
-	float min_mean = deg2rad(90);
-	float max_mean = deg2rad(135);
-	float max_std = 0.15;
+	double d_thresh = 0.3;  // distance threshold for clustering
+	int min_cluster_n = 3;  // minimum number of elements in a cluster
+	double min_angle_mean_deg = 90;
+	double max_angle_mean_deg = 135;
+	double max_angle_std = 0.15;
+	double min_circle_radius = 0.03;
+	double max_circle_radius = 0.14;
+	
+	
+	n.getParam("d_thresh", d_thresh);
+	n.getParam("min_cluster_n", min_cluster_n);
+	n.getParam("min_angle_mean", min_angle_mean_deg);
+	n.getParam("max_angle_mean", max_angle_mean_deg);
+	n.getParam("max_angle_std", max_angle_std);
+	n.getParam("min_circle_radius", min_circle_radius);
+	n.getParam("max_circle_radius", max_circle_radius);
+	
+	double min_angle_mean = deg2rad(min_angle_mean_deg);
+	double max_angle_mean = deg2rad(max_angle_mean_deg);
+	
 	
 	std::vector<std::vector<int>> clusters;
-	
 	auto current_time = ros::Time::now();
 	
 	while(n.ok())
@@ -54,13 +76,17 @@ int main(int argc, char** argv)
 		visualization_msgs::MarkerArray circle_markers;
 		if (is_received)
 		{
-			clusters = cluster_ranges(scan.ranges, thresh, min_n);
+			clusters = cluster_ranges(scan.ranges, d_thresh, min_cluster_n);
 			for (std::size_t i=0; i<clusters.size(); ++i)
 			{
-				if (is_circle(scan.ranges, clusters[i], scan.angle_increment, min_mean, max_mean, max_std))
+				if (is_circle(scan.ranges, clusters[i], scan.angle_increment, min_angle_mean, max_angle_mean, max_angle_std))
 				{
 					std::vector<Vector2D> pts = range2xy(scan.ranges, clusters[i], scan.angle_increment);
 					Circle c = fit_circle(pts);
+					if ((c.r >= min_circle_radius) && (c.r <= max_circle_radius))
+					{
+						circles.push_back(c);
+					}
 					circles.push_back(c);
 				}
 			}

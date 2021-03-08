@@ -16,7 +16,6 @@
 	<!-- r_cov is ordered as [sigma_x, sigma_y, sigma_xy] -->
 	<rosparam param="r_cov">[0.01, 0.01, 0.001]</rosparam>
 	
-	<param name="robot_description" command="$(find xacro)/xacro $(find nuturtle_description)/urdf/turtlebot3_burger.urdf.xacro" />
 	<group if="$(eval robot == 'localhost')">
 		<include file="$(find nurtlesim)/launch/start_sim.launch">
 			<arg name="use_rviz" value="false"/>

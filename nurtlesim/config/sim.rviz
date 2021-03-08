@@ -6,9 +6,6 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /MarkerArray1
-        - /MarkerArray2
-        - /MarkerArray2/Status1
       Splitter Ratio: 0.5
     Tree Height: 385
   - Class: rviz/Selection
@@ -151,7 +148,7 @@ Visualization Manager:
       Marker Topic: /circles_detected
       Name: MarkerArray
       Namespaces:
-        circles: true
+        {}
       Queue Size: 100
       Value: true
   Enabled: true
@@ -182,7 +179,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 10.77285099029541
+      Distance: 7.647159099578857
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -190,17 +187,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: -0.6250665783882141
+        Y: -0.4240410625934601
+        Z: -0.3457285463809967
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7597970962524414
+      Pitch: 0.9697968363761902
       Target Frame: <Fixed Frame>
-      Yaw: 4.858578681945801
+      Yaw: 3.441728353500366
     Saved: ~
 Window Geometry:
   Displays:

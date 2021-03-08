@@ -1,19 +1,28 @@
 <?xml version="1.0"?>
 <launch>
-	<!--arg name="simulate" default="true" doc="true: launch simulator and landmark detection on localhost, false: launch landmark detection on the turtlebot"/>
+	<arg name="simulate" default="true" doc="true: launch simulator and landmark detection on localhost, false: launch landmark detection on the turtlebot"/>
 	
-	<group if="$(arg simulate)"-->
+	<param name="d_thresh" value="0.3"/>
+	<param name="min_cluster_n" value="3"/>
+	<param name="min_angle_mean" value="80"/>
+	<param name="max_angle_mean" value="155"/>
+	<param name="max_angle_std" value="0.3"/>
+	<param name="min_circle_radius" value="0.03"/>
+	<param name="max_circle_radius" value="0.14"/>
+	
+	<group if="$(arg simulate)">
 		<machine name="turtlebot" address="localhost" env-loader="/home/ubuntu/loader.sh"/>
 		<include file="$(find nuslam)/launch/slam.launch">
 			<arg name="robot" value="localhost"/>
 		</include>
-	<!--/group>
+	</group>
+	
 	<group unless="$(arg simulate)">
 		<machine name="turtlebot" address="turtlebot.local" user="ubuntu" env-loader="/home/ubuntu/loader.sh"/>
 		<include file="$(find nuslam)/launch/slam.launch">
 			<arg name="robot" value="turtlebot.local"/>
 		</include>
-	</group-->
+	</group>
 		
 	<node machine="turtlebot" pkg="nuslam" type="landmarks" name="landmarks"/>
 	
