@@ -9,6 +9,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <visualization_msgs/Marker.h>
 #include "nuslam/circle_learning.hpp"
 #include "rigid2d/rigid2d.hpp"
 #include <vector>
@@ -43,9 +44,14 @@ int main(int argc, char** argv)
 	
 	std::vector<std::vector<int>> clusters;
 	
+	auto current_time = ros::Time::now();
+	
 	while(n.ok())
 	{	
+		ros::spinOnce();
+		current_time = ros::Time::now(); 
 		std::vector<Circle> circles;
+		visualization_msgs::MarkerArray circle_markers;
 		if (is_received)
 		{
 			clusters = cluster_ranges(scan.ranges, thresh, min_n);
@@ -58,7 +64,35 @@ int main(int argc, char** argv)
 					circles.push_back(c);
 				}
 			}
-			//TODO publish circles as markers
+			for (std::size_t i=0; i<circles.size(); ++i)
+			{
+				visualization_msgs::Marker m;
+				m.header.stamp = current_time;
+				m.header.frame_id = "map";  // relative to the map frame
+				m.ns = "circles";
+				m.id = i+1;  // unique id under namespace
+				m.type = visualization_msgs::Marker::CYLINDER;
+				m.action = visualization_msgs::Marker::ADD;
+				// assign x and y positions of the marker to be the center of the circle fitted
+				m.pose.position.x = circles[i].x; 
+				m.pose.position.y = circles[i].y;
+				m.pose.position.z = 0;
+				m.pose.orientation.x = 0;
+				m.pose.orientation.y = 0;
+				m.pose.orientation.z = 0;
+				m.pose.orientation.w = 1;
+				// scale rviz visualization with fitted radius
+				m.scale.x = circles[i].r;
+				m.scale.y = circles[i].r;
+				m.scale.z = 0.2;
+				// yellow marker, not transparent
+				m.color.r = 0.0;
+				m.color.b = 1.0;
+				m.color.g = 1.0;
+				m.color.a = 1.0;
+				circle_markers.markers.push_back(m);  // add marker to the array
+			}
+		pub.publish(circle_markers);
 		}
 		r.sleep();
 	}
