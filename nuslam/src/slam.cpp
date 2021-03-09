@@ -127,6 +127,51 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 	{
 		Landmark lm = qe.front();  // get landmark
 		qe.pop();  // delete landmark from queue
+		
+		//FIXME do data association here (start)
+		if (unknown_assoc)
+		{
+			arma::Mat<double> Mcopy(M);  // make a copy of the landmarks matrix
+			Landmark lm_temp(lm.r, lm.phi, lm_seen+1);  // process incoming landmark as new landmark
+			initialize_landmark(t_mb, lm_temp, Mcopy);  // temporarily initialize_landmark
+			arma::Col<double> z = {lm_temp.r, lm_temp.phi};
+			std::vector<double> mahdst(lm_seen+1);  // vector of mahalanobis distance
+			for (int j=0; j<lm_seen+1; ++j)
+			{
+				double dx = Mcopy(2*j,0) - t_mb.getX();
+				double dy = Mcopy(2*j+1,0) - t_mb.getY();
+				
+				arma::Mat<double> H = compute_Hj_mat(dx, dy, n_lm, j+1);  // compute Hk, the linearized measurement model
+				arma::Mat<double> psi = H*S*H.t() + R;  // compute the covariance
+				arma::Col<double> zh = compute_meas(t_mb, Mcopy, j+1);
+				arma::Col<double> delta_z = {z(0,0)-zh(0,0), normalize_angular_difference(z(1,0), zh(1,0))};
+				arma::Mat<double> dk = delta_z.t() * arma::inv(psi) * delta_z;
+				mahdst[j] = dk(0,0);
+				
+			}
+			mahdst[lm_seen] = mahdst_thresh;
+			double dk_min = 100000;
+			int l=0;
+			for (int j=0; j<lm_seen+1; ++j)
+			{
+				double dk_current = mahdst[j];
+				if (dk_current < dk_min)
+				{
+					dk_min = dk_current;
+					l=j;
+				}
+			}
+			lm.id = l+1;
+			if (l < n_lm-1)
+			{
+				if (l == lm_seen)
+				{
+					++lm_seen;
+				}
+			}
+		}
+		//FIXME do that association here (end)
+			
 		if (!is_init[lm.id-1])  // landmark id's start from 1
 		{
 			initialize_landmark(t_mb, lm, M);
@@ -213,63 +258,8 @@ void markers_callback(const visualization_msgs::MarkerArray::ConstPtr & msg)
 		if (msg -> markers[i].action == 0)
 		{
 			Vector2D v(msg -> markers[i].pose.position.x, msg -> markers[i].pose.position.y);
-			int id;
-			if (!unknown_assoc)
-			{
-				id = msg -> markers[i].id;
-				Landmark lm(magnitude(v), angle(v), id);
-				qe.push(lm);
-			}
-			else  // unknown data association
-			{
-				arma::Mat<double> Mcopy(M);  // make a copy of the landmarks matrix
-				Landmark lm_temp(magnitude(v), angle(v), lm_seen+1);  // process incoming landmark as new landmark
-				initialize_landmark(t_mb, lm_temp, Mcopy);  // temporarily initialize_landmark
-				arma::Col<double> z = {lm_temp.r, lm_temp.phi};
-				std::vector<double> mahdst(lm_seen+1);  // vector of mahalanobis distance
-				for (int j=0; j<lm_seen+1; ++j)
-				{
-					double dx = Mcopy(2*j,0) - t_mb.getX();
-					double dy = Mcopy(2*j+1,0) - t_mb.getY();
-					
-					arma::Mat<double> H = compute_Hj_mat(dx, dy, n_lm, j+1);  // compute Hk, the linearized measurement model
-					arma::Mat<double> psi = H*S*H.t() + R;  // compute the covariance
-					arma::Col<double> zh = compute_meas(t_mb, Mcopy, j+1);
-					arma::Col<double> delta_z = {z(0,0)-zh(0,0), normalize_angular_difference(z(1,0), zh(1,0))};
-					arma::Mat<double> dk = delta_z.t() * arma::inv(psi) * delta_z;
-					mahdst[j] = dk(0,0);
-					
-				}
-				mahdst[lm_seen] = mahdst_thresh;
-				double dk_min = 100000;
-				int l=0;
-				for (int j=0; j<lm_seen+1; ++j)
-				{
-					double dk_current = mahdst[j];
-					if (dk_current < dk_min)
-					{
-						dk_min = dk_current;
-						l=j;
-					}
-				}
-				id = l+1;
-				if (l < n_lm-1)
-				{
-					if (l == lm_seen)
-					{
-						++lm_seen;
-						Landmark lm(magnitude(v), angle(v), id);
-						qe.push(lm);
-						initialize_landmark(t_mb, lm, M);  //initialize_landmark
-						is_init[lm.id-1] = 1;	
-					}
-					else
-					{
-						Landmark lm(magnitude(v), angle(v), id);
-						qe.push(lm);
-					}
-				}
-			}
+			Landmark lm(magnitude(v), angle(v), msg -> markers[i].id);
+			qe.push(lm);
 		}
 	}
 }
