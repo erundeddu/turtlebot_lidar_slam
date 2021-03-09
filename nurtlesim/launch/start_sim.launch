@@ -9,7 +9,7 @@
 	<rosparam param="x_tubes">[2, -2, -0.5, 1, 0.6]</rosparam>
 	<rosparam param="y_tubes">[2, 2.5, 0.2, 0.8, -0.3]</rosparam>
 	<!-- "tube_var" is ordered as [sigma_x, sigma_y, sigma_xy] -->
-	<rosparam param="tube_var">[0.03, 0.03, 0.01]</rosparam>
+	<rosparam param="tube_var">[0.003,0.003,0.001]</rosparam>   <!--[0.03, 0.03, 0.01]-->
 	<param name="tube_radius" value="0.0762"/>
 	<param name="d_max_tubes" value="2.0"/>
 	<param name="robot_radius" value ="0.105"/>  
@@ -18,7 +18,7 @@
 	<param name="lidar_dtheta" value="1"/> <!-- in degrees -->
 	<param name="lidar_n_samples" value="360"/>
 	<param name="lidar_resolution" value="0.015"/>
-	<param name="lidar_noise" value="0.01"/>
+	<param name="lidar_noise" value="0"/>
 	<param name="border_width" value="4"/>
 	<param name="border_height" value="4"/>
 	<rosparam command="load" file="$(find nuturtle_description)/config/diff_params.yaml" />

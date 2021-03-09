@@ -87,7 +87,6 @@ int main(int argc, char** argv)
 					{
 						circles.push_back(c);
 					}
-					circles.push_back(c);
 				}
 			}
 			for (std::size_t i=0; i<circles.size(); ++i)
