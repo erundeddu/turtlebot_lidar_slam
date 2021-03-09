@@ -2,7 +2,7 @@
 <package format="2">
   <name>nuslam</name>
   <version>1.0.0</version>
-  <description>Implements Feature-Based Kalman Filter SLAM</description>
+  <description>Implements Feature-Based Kalman Filter SLAM with known and unknown data association and landmark detection</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->

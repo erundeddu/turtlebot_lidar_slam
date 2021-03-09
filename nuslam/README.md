@@ -4,7 +4,9 @@
 * Visualization of SLAM estimated landmarks (blue) in rviz
 * Compatible with nurtlesim simulation or with real turtlebot
 * Detection of obstacle tubes from radar scan data through regression
+* Use either known or unknown data association for SLAM
 # Example Usage
+1. Known data association
 ```
 roslaunch nuslam slam.launch robot:=localhost
 ```
@@ -21,7 +23,13 @@ roslaunch nuslam slam.launch robot:=localhost
 ![Collision simulation](images/sim2.png)
 * Shows approximately matching real path and SLAM path at the beginning of the simulation, while the odometry path is different due to the robot wheels moving during the collision
 
+2. Detection of landmarks through laser scan data
 ```
-roslaunch nuslam landmark_detect.launch robot:=localhost
+roslaunch nuslam landmark_detect.launch simulate:=true
+```
+
+3. Unknown data association
+```
+roslaunch nuslam unknown_data_assoc.launch robot:=localhost
 ```
 
