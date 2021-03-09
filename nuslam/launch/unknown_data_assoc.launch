@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<launch>
+	<arg name="robot" default="localhost" doc="the hostname of the turtlebot, localhost for simulation"/>
+	
+	<param name="unknown_assoc" value="1"/>
+	<param name="mahdst_thresh" value="0.4"/>
+	
+	<group if="$(eval robot == 'localhost')">
+		<include file="$(find nuslam)/launch/landmark_detect.launch">
+			<arg name="simulate" value="true"/>
+		</include>
+	</group>
+	<group unless="$(eval robot == 'localhost')">
+		<include file="$(find nuslam)/launch/landmark_detect.launch">
+			<arg name="simulate" value="false"/>
+		</include>
+	</group>
+</launch>
