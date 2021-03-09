@@ -59,6 +59,15 @@ namespace nuslam
 		M(2*(lm.id-1)+1,0) = my;
 	}
 	
+	rigid2d::Vector2D inv_meas(rigid2d::Transform2D & t_mb, Landmark & lm)
+	{
+		using namespace rigid2d;
+		double mx = t_mb.getX() + lm.r*cos(lm.phi + t_mb.getTheta());
+		double my = t_mb.getY() + lm.r*sin(lm.phi + t_mb.getTheta());
+		Vector2D v(mx,my);
+		return v;
+	}
+	
 	arma::Col<double> compute_meas(rigid2d::Transform2D & t_mb, arma::Mat<double> & M, double id)
 	{
 		using namespace rigid2d;

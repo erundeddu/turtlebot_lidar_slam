@@ -6,10 +6,10 @@
 	<param name="vx_noise" value="0.01"/>
 	<param name="w_noise" value="0.01"/>
 	<param name="slip_max" value="0.1"/>
-	<rosparam param="x_tubes">[2, -2, -0.5, 1, 0.6]</rosparam>
-	<rosparam param="y_tubes">[2, 2.5, 0.2, 0.8, -0.3]</rosparam>
+	<rosparam param="x_tubes">[2, -2, -0.5, 1, 0.6, 1.2, 0]</rosparam>
+	<rosparam param="y_tubes">[2, 1.5, 0.2, 0.8, -0.3, -1, -0.5]</rosparam>
 	<!-- "tube_var" is ordered as [sigma_x, sigma_y, sigma_xy] -->
-	<rosparam param="tube_var">[0.003,0.003,0.001]</rosparam>   <!--[0.03, 0.03, 0.01]-->
+	<rosparam param="tube_var">[0.0003,0.0003,0.0001]</rosparam>   <!--[0.03, 0.03, 0.01]-->
 	<param name="tube_radius" value="0.0762"/>
 	<param name="d_max_tubes" value="2.0"/>
 	<param name="robot_radius" value ="0.105"/>  
@@ -19,8 +19,8 @@
 	<param name="lidar_n_samples" value="360"/>
 	<param name="lidar_resolution" value="0.015"/>
 	<param name="lidar_noise" value="0"/>
-	<param name="border_width" value="4"/>
-	<param name="border_height" value="4"/>
+	<param name="border_width" value="8"/>
+	<param name="border_height" value="8"/>
 	<rosparam command="load" file="$(find nuturtle_description)/config/diff_params.yaml" />
 	
 	<node pkg="turtlebot3_teleop" type="turtlebot3_teleop_key" name="turtlebot3_teleop_keyboard" output="screen"/>

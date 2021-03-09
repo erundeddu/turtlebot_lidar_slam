@@ -52,6 +52,7 @@ static arma::Col<double> M;
 static nav_msgs::Path odom_path;
 static nav_msgs::Path slam_path;
 static std::vector<int> is_init;
+static std::vector<int> times_seen;
 int n_lm = 10;  // maximum number of landmarks to track
 static geometry_msgs::PoseStamped pos;
 
@@ -123,12 +124,12 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 		
 	S = A*S*arma::trans(A) + Q_bar;  // propagate uncertainty
 	
-	while (!qe.empty())  // if markers message are available, process them
+	while (!qe.empty())  // if markers messages are available, process them
 	{
 		Landmark lm = qe.front();  // get landmark
 		qe.pop();  // delete landmark from queue
 		
-		//FIXME do data association here (start)
+		//TODO do data association here (start)
 		if (unknown_assoc)
 		{
 			arma::Mat<double> Mcopy(M);  // make a copy of the landmarks matrix
@@ -140,17 +141,16 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 			{
 				double dx = Mcopy(2*j,0) - t_mb.getX();
 				double dy = Mcopy(2*j+1,0) - t_mb.getY();
-				
 				arma::Mat<double> H = compute_Hj_mat(dx, dy, n_lm, j+1);  // compute Hk, the linearized measurement model
 				arma::Mat<double> psi = H*S*H.t() + R;  // compute the covariance
 				arma::Col<double> zh = compute_meas(t_mb, Mcopy, j+1);
 				arma::Col<double> delta_z = {z(0,0)-zh(0,0), normalize_angular_difference(z(1,0), zh(1,0))};
-				arma::Mat<double> dk = delta_z.t() * arma::inv(psi) * delta_z;
-				mahdst[j] = dk(0,0);
+				arma::Mat<double> dk = delta_z.t() * arma::inv(psi) * delta_z;  // compute mahalanobis distance
+				mahdst[j] = dk(0,0);  // matrix to double
 				
 			}
-			mahdst[lm_seen] = mahdst_thresh;
-			double dk_min = 100000;
+			mahdst[lm_seen] = mahdst_thresh;  // set temporary landmark distance to threshold
+			double dk_min = 100000; // arbitrarily high min distance for min-finding algorithm
 			int l=0;
 			for (int j=0; j<lm_seen+1; ++j)
 			{
@@ -161,43 +161,51 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 					l=j;
 				}
 			}
-			lm.id = l+1;
-			if (l < n_lm-1)
+			lm.id = l+1;  // assign id to landmark
+			times_seen[l] += 1;
+			
+			if (l < n_lm-1)  // condition to ensure that the matrix M does not fill up
 			{
-				if (l == lm_seen)
+				if (l == lm_seen)  // if this is a new landmark
 				{
 					++lm_seen;
 				}
 			}
 		}
-		//FIXME do that association here (end)
+		//TODO do that association here (end)
 			
 		if (!is_init[lm.id-1])  // landmark id's start from 1
 		{
 			initialize_landmark(t_mb, lm, M);
-			is_init[lm.id-1] = 1;
+			if ((!unknown_assoc) || (times_seen[lm.id-1] > 50))  //FIXME
+			{ 
+				is_init[lm.id-1] = 1;
+			}
 		}
-		// compute the theoretical measurement
-		arma::Col<double> zh = compute_meas(t_mb, M, lm.id);
-		// compute the kalman gain
-		double dx = M(2*(lm.id-1),0) - t_mb.getX();
-		double dy = M(2*(lm.id-1)+1,0) - t_mb.getY();
-		arma::Mat<double> H = compute_Hj_mat(dx, dy, n_lm, lm.id);
-		arma::Mat<double> K = S*H.t()*arma::inv(H*S*H.t()+R);
-		// compute the posterior state update
-		arma::Col<double> z = {lm.r, lm.phi};
-		arma::Col<double> q = {t_mb.getTheta(), t_mb.getX(), t_mb.getY()};
-		arma::Col<double> state = arma::join_cols(q, M);
-		arma::Col<double> delta_z = {z(0,0)-zh(0,0), normalize_angular_difference(z(1,0), zh(1,0))};
-		state += K*delta_z;
-		// update internal transformations and states
-		Vector2D v_mb_goal(state(1,0), state(2,0));
-		Transform2D t_mb_goal(v_mb_goal, state(0,0));
-		t_mo = t_mb_goal*t_ob.inv();
-		t_mb = t_mb_goal;
-		M = state.rows(3,M.n_rows+2);
-		// compute the posterior covariance
-		S = (arma::eye(size(S)) - K*H)*S;
+		if ((!unknown_assoc) || (times_seen[lm.id-1] > 50))  //FIXME
+		{
+			// compute the theoretical measurement
+			arma::Col<double> zh = compute_meas(t_mb, M, lm.id);
+			// compute the kalman gain
+			double dx = M(2*(lm.id-1),0) - t_mb.getX();
+			double dy = M(2*(lm.id-1)+1,0) - t_mb.getY();
+			arma::Mat<double> H = compute_Hj_mat(dx, dy, n_lm, lm.id);
+			arma::Mat<double> K = S*H.t()*arma::inv(H*S*H.t()+R);
+			// compute the posterior state update
+			arma::Col<double> z = {lm.r, lm.phi};
+			arma::Col<double> q = {t_mb.getTheta(), t_mb.getX(), t_mb.getY()};
+			arma::Col<double> state = arma::join_cols(q, M);
+			arma::Col<double> delta_z = {z(0,0)-zh(0,0), normalize_angular_difference(z(1,0), zh(1,0))};
+			state += K*delta_z;
+			// update internal transformations and states
+			Vector2D v_mb_goal(state(1,0), state(2,0));
+			Transform2D t_mb_goal(v_mb_goal, state(0,0));
+			t_mo = t_mb_goal*t_ob.inv();
+			t_mb = t_mb_goal;
+			M = state.rows(3,M.n_rows+2);
+			// compute the posterior covariance
+			S = (arma::eye(size(S)) - K*H)*S;
+		}
 	}
 
 	// construct message for SLAM path
@@ -349,6 +357,7 @@ int main(int argc, char** argv)
 	for (int i=0; i < n_lm; ++i) // initialize vector to check for landmark initialization
 	{
 		is_init.push_back(0);
+		times_seen.push_back(0);
 	}
 										
 	S = initialize_S(n_lm);

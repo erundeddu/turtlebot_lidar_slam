@@ -276,7 +276,7 @@ Visualization Manager:
           Scale: 1
           Value: true
         Value: true
-      Enabled: true
+      Enabled: false
       Keep: 20
       Name: Odometry
       Position Tolerance: 0.10000000149011612
@@ -293,7 +293,7 @@ Visualization Manager:
         Value: Arrow
       Topic: /odom
       Unreliable: false
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -376,9 +376,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6003987789154053
+      Pitch: 0.9603984355926514
       Target Frame: <Fixed Frame>
-      Yaw: 5.443560600280762
+      Yaw: 4.478543758392334
     Saved: ~
 Window Geometry:
   Displays:

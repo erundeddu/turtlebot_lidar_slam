@@ -49,6 +49,12 @@ namespace nuslam
     /// \param M - the state estimate vector of the map at time t-1
     void initialize_landmark(rigid2d::Transform2D & t_mb, Landmark & lm, arma::Mat<double> & M);
     
+    /// \brief invert range-bearing measurement to extract coordinates of landmark
+    /// \param t_mb - the map to base_footprint transform at t
+    /// \param lm - the landmark
+    /// \return a vector containing landmark coordinates from measurement inversion
+    rigid2d::Vector2D inv_meas(rigid2d::Transform2D & t_mb, Landmark & lm);
+    
     /// \brief compute theoretical measurement for a landmark
     /// \param t_mb - the map to base_footprint transform at t
     /// \param M - the state estimate vector of the map at time t-1
