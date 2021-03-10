@@ -19,8 +19,8 @@
 	<param name="lidar_n_samples" value="360"/>
 	<param name="lidar_resolution" value="0.015"/>
 	<param name="lidar_noise" value="0"/>
-	<param name="border_width" value="8"/>
-	<param name="border_height" value="8"/>
+	<param name="border_width" value="6"/>
+	<param name="border_height" value="6"/>
 	<rosparam command="load" file="$(find nuturtle_description)/config/diff_params.yaml" />
 	
 	<node pkg="turtlebot3_teleop" type="turtlebot3_teleop_key" name="turtlebot3_teleop_keyboard" output="screen"/>

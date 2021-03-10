@@ -2,26 +2,27 @@
 <launch>
 	<arg name="simulate" default="true" doc="true: launch simulator and landmark detection on localhost, false: launch landmark detection on the turtlebot"/>
 	
-	<param name="d_thresh" value="0.4"/>
+	<param name="d_thresh" value="0.3"/>
 	<param name="min_cluster_n" value="5"/>
 	<param name="min_angle_mean" value="80"/>
-	<param name="max_angle_mean" value="155"/>
+	<param name="max_angle_mean" value="160"/>
 	<param name="max_angle_std" value="0.3"/>
-	<param name="min_circle_radius" value="0.03"/>
-	<param name="max_circle_radius" value="0.14"/>
+	<param name="min_circle_radius" value="0.04"/>
+	<param name="max_circle_radius" value="0.10"/>
 	
 	<group if="$(arg simulate)">
 		<machine name="turtlebot" address="localhost" env-loader="/home/ubuntu/loader.sh"/>
-		<include file="$(find nuslam)/launch/slam.launch">
-			<arg name="robot" value="localhost"/>
+		<include file="$(find nurtlesim)/launch/start_sim.launch">
+			<!--arg name="robot" value="localhost"/-->
 		</include>
 	</group>
 	
 	<group unless="$(arg simulate)">
 		<machine name="turtlebot" address="turtlebot.local" user="ubuntu" env-loader="/home/ubuntu/loader.sh"/>
-		<include file="$(find nuslam)/launch/slam.launch">
-			<arg name="robot" value="turtlebot.local"/>
+		<include file="$(find nuturtle_robot)/launch/odom_teleop.launch">
+			<arg name="circle" value="false"/>
 		</include>
+		<node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 1 base_scan turtle 100" />
 	</group>
 		
 	<node machine="turtlebot" pkg="nuslam" type="landmarks" name="landmarks"/>

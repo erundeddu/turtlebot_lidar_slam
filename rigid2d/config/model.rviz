@@ -12,6 +12,7 @@ Panels:
         - /RobotModel1
         - /TF1
         - /Odometry1
+        - /MarkerArray1
       Splitter Ratio: 0.6029411554336548
     Tree Height: 385
   - Class: rviz/Selection
@@ -32,7 +33,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: LaserScan
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -160,7 +161,11 @@ Visualization Manager:
           Value: true
         imu_link:
           Value: true
+        laser:
+          Value: true
         odom:
+          Value: true
+        turtle:
           Value: true
         wheel_left_link:
           Value: true
@@ -177,7 +182,8 @@ Visualization Manager:
           base_footprint:
             base_link:
               base_scan:
-                {}
+                laser:
+                  {}
               caster_back_link:
                 {}
               imu_link:
@@ -186,6 +192,8 @@ Visualization Manager:
                 {}
               wheel_right_link:
                 {}
+            turtle:
+              {}
       Update Interval: 0
       Value: true
     - Angle Tolerance: 0.10000000149011612
@@ -223,6 +231,14 @@ Visualization Manager:
       Topic: /odom
       Unreliable: false
       Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /circles_detected
+      Name: MarkerArray
+      Namespaces:
+        circles: true
+      Queue Size: 100
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 108; 108; 108
@@ -251,7 +267,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 1.910049319267273
+      Distance: 2.8775229454040527
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -267,9 +283,9 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7953976392745972
+      Pitch: 1.2803971767425537
       Target Frame: <Fixed Frame>
-      Yaw: 4.793606281280518
+      Yaw: 3.3985986709594727
     Saved: ~
 Window Geometry:
   Displays:
