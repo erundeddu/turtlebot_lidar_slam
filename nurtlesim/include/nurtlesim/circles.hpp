@@ -10,11 +10,11 @@ namespace circles
 	/// \brief a structure to be returned by functions to get if intersection exists, and which point (if any) the intersection is
 	struct Intersection
 	{
-		// if true, an intersection exists
+		/// if true, an intersection exists
 		bool is_intersection = false;
-		// x coordinate of the intersection
+		/// x coordinate of the intersection
 		double x = 0.0;
-		// y coordinate of the intersection
+		/// y coordinate of the intersection
 		double y = 0.0;
 	}; 
 

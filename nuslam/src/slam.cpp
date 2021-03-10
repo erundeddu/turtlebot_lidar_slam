@@ -49,11 +49,14 @@ static geometry_msgs::TransformStamped map2odom;
 static bool started(false);
 static std::queue<nuslam::Landmark> qe;
 static arma::Col<double> M;
+//static arma::Col<double> Mtemp;
 static nav_msgs::Path odom_path;
 static nav_msgs::Path slam_path;
 static std::vector<int> is_init;
 static std::vector<int> times_seen;
-int n_lm = 10;  // maximum number of landmarks to track
+static std::vector<int> is_slam;
+static std::vector<int> count_to_last;
+static int n_lm = 20;  // maximum number of landmarks to track
 static geometry_msgs::PoseStamped pos;
 
 static rigid2d::Transform2D t_mb;  // map to base_footprint transform
@@ -68,6 +71,9 @@ static arma::Mat<double> Q_bar;
 static int unknown_assoc = 0;
 static int lm_seen = 0;
 static double mahdst_thresh = 1.0;
+
+static int times_seen_thresh = 50;
+static int count_to_last_thresh = 100;
 
 
 /// \brief Updates internal odometry state, publishes a ROS odometry message, broadcast the transform between odometry and body frame on tf
@@ -139,72 +145,102 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 			std::vector<double> mahdst(lm_seen+1);  // vector of mahalanobis distance
 			for (int j=0; j<lm_seen+1; ++j)
 			{
-				double dx = Mcopy(2*j,0) - t_mb.getX();
-				double dy = Mcopy(2*j+1,0) - t_mb.getY();
-				arma::Mat<double> H = compute_Hj_mat(dx, dy, n_lm, j+1);  // compute Hk, the linearized measurement model
-				arma::Mat<double> psi = H*S*H.t() + R;  // compute the covariance
-				arma::Col<double> zh = compute_meas(t_mb, Mcopy, j+1);
-				arma::Col<double> delta_z = {z(0,0)-zh(0,0), normalize_angular_difference(z(1,0), zh(1,0))};
-				arma::Mat<double> dk = delta_z.t() * arma::inv(psi) * delta_z;  // compute mahalanobis distance
-				mahdst[j] = dk(0,0);  // matrix to double
-				
+				if ((is_init[j]) || j == lm_seen)
+				{
+					double dx = Mcopy(2*j,0) - t_mb.getX();
+					double dy = Mcopy(2*j+1,0) - t_mb.getY();
+					arma::Mat<double> H = compute_Hj_mat(dx, dy, n_lm, j+1);  // compute Hk, the linearized measurement model
+					arma::Mat<double> psi = H*S*H.t() + R;  // compute the covariance
+					arma::Col<double> zh = compute_meas(t_mb, Mcopy, j+1);
+					arma::Col<double> delta_z = {z(0,0)-zh(0,0), normalize_angular_difference(z(1,0), zh(1,0))};
+					arma::Mat<double> dk = delta_z.t() * arma::inv(psi) * delta_z;  // compute mahalanobis distance
+					mahdst[j] = dk(0,0);  // matrix to double
+				}
 			}
 			mahdst[lm_seen] = mahdst_thresh;  // set temporary landmark distance to threshold
 			double dk_min = 100000; // arbitrarily high min distance for min-finding algorithm
 			int l=0;
 			for (int j=0; j<lm_seen+1; ++j)
 			{
-				double dk_current = mahdst[j];
-				if (dk_current < dk_min)
+				if ((is_init[j]) || j == lm_seen)
 				{
-					dk_min = dk_current;
-					l=j;
+					double dk_current = mahdst[j];
+					if (dk_current < dk_min)
+					{
+						dk_min = dk_current;
+						l=j;
+					}
 				}
 			}
 			lm.id = l+1;  // assign id to landmark
 			times_seen[l] += 1;
-			
-			if (l < n_lm-1)  // condition to ensure that the matrix M does not fill up
+			for (int j=0; j<n_lm; ++j)
 			{
-				if (l == lm_seen)  // if this is a new landmark
+				if (j == l)
+				{
+					count_to_last[j] = 0;
+				}
+				else
+				{
+					count_to_last[j] += 1; 
+					if ((count_to_last[j] > count_to_last_thresh) && (!is_slam[j]))  // if temporary and not seen for a while: remove
+					{
+						is_init[j] = 0;
+						times_seen[j] = 0;
+					}
+				}
+				
+			}			
+			
+			if (l == lm_seen)  // if this is a new landmark
+			{
+				if (l < n_lm-1)  // condition to ensure that the matrix M does not fill up
 				{
 					++lm_seen;
 				}
+				else
+				{
+					lm.id = -1;  // code to ignore landmark
+				}
 			}
 		}
-		//TODO do that association here (end)
-			
-		if (!is_init[lm.id-1])  // landmark id's start from 1
-		{
-			initialize_landmark(t_mb, lm, M);
-			if ((!unknown_assoc) || (times_seen[lm.id-1] > 50))  //FIXME
-			{ 
+		
+		//TODO do data association here (end)
+		if (!(lm.id == -1))
+		{	
+			if (!is_slam[lm.id-1])  // landmark id's start from 1
+			{
+				initialize_landmark(t_mb, lm, M);
 				is_init[lm.id-1] = 1;
+				if ((!unknown_assoc) || (times_seen[lm.id-1] > times_seen_thresh))
+				{ 
+					is_slam[lm.id-1] = 1;
+				}
 			}
-		}
-		if ((!unknown_assoc) || (times_seen[lm.id-1] > 50))  //FIXME
-		{
-			// compute the theoretical measurement
-			arma::Col<double> zh = compute_meas(t_mb, M, lm.id);
-			// compute the kalman gain
-			double dx = M(2*(lm.id-1),0) - t_mb.getX();
-			double dy = M(2*(lm.id-1)+1,0) - t_mb.getY();
-			arma::Mat<double> H = compute_Hj_mat(dx, dy, n_lm, lm.id);
-			arma::Mat<double> K = S*H.t()*arma::inv(H*S*H.t()+R);
-			// compute the posterior state update
-			arma::Col<double> z = {lm.r, lm.phi};
-			arma::Col<double> q = {t_mb.getTheta(), t_mb.getX(), t_mb.getY()};
-			arma::Col<double> state = arma::join_cols(q, M);
-			arma::Col<double> delta_z = {z(0,0)-zh(0,0), normalize_angular_difference(z(1,0), zh(1,0))};
-			state += K*delta_z;
-			// update internal transformations and states
-			Vector2D v_mb_goal(state(1,0), state(2,0));
-			Transform2D t_mb_goal(v_mb_goal, state(0,0));
-			t_mo = t_mb_goal*t_ob.inv();
-			t_mb = t_mb_goal;
-			M = state.rows(3,M.n_rows+2);
-			// compute the posterior covariance
-			S = (arma::eye(size(S)) - K*H)*S;
+			if (is_slam[lm.id-1])
+			{
+				// compute the theoretical measurement
+				arma::Col<double> zh = compute_meas(t_mb, M, lm.id);
+				// compute the kalman gain
+				double dx = M(2*(lm.id-1),0) - t_mb.getX();
+				double dy = M(2*(lm.id-1)+1,0) - t_mb.getY();
+				arma::Mat<double> H = compute_Hj_mat(dx, dy, n_lm, lm.id);
+				arma::Mat<double> K = S*H.t()*arma::inv(H*S*H.t()+R);
+				// compute the posterior state update
+				arma::Col<double> z = {lm.r, lm.phi};
+				arma::Col<double> q = {t_mb.getTheta(), t_mb.getX(), t_mb.getY()};
+				arma::Col<double> state = arma::join_cols(q, M);
+				arma::Col<double> delta_z = {z(0,0)-zh(0,0), normalize_angular_difference(z(1,0), zh(1,0))};
+				state += K*delta_z;
+				// update internal transformations and states
+				Vector2D v_mb_goal(state(1,0), state(2,0));
+				Transform2D t_mb_goal(v_mb_goal, state(0,0));
+				t_mo = t_mb_goal*t_ob.inv();
+				t_mb = t_mb_goal;
+				M = state.rows(3,M.n_rows+2);
+				// compute the posterior covariance
+				S = (arma::eye(size(S)) - K*H)*S;
+			}
 		}
 	}
 
@@ -357,7 +393,9 @@ int main(int argc, char** argv)
 	for (int i=0; i < n_lm; ++i) // initialize vector to check for landmark initialization
 	{
 		is_init.push_back(0);
+		is_slam.push_back(0);
 		times_seen.push_back(0);
+		count_to_last.push_back(0);
 	}
 										
 	S = initialize_S(n_lm);
@@ -371,7 +409,7 @@ int main(int argc, char** argv)
 		visualization_msgs::MarkerArray slam_markers;
 		for (int i=0; i < n_lm; ++i)
 		{
-			if (is_init[i])
+			if (is_slam[i])
 			{
 				visualization_msgs::Marker m;  // initialize marker to add to the array
 				m.header.stamp = current_time;

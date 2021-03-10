@@ -117,7 +117,7 @@ int main(int argc, char** argv)
 				m.color.a = 1.0;
 				circle_markers.markers.push_back(m);  // add marker to the array
 			}
-		pub.publish(circle_markers);
+			pub.publish(circle_markers);
 		}
 		r.sleep();
 	}

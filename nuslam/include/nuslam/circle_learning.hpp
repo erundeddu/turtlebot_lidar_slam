@@ -11,11 +11,11 @@ namespace nuslam
 	/// \brief structure to represent a circle on a plane
 	struct Circle
 	{
-		// x coordinate of circle center
+		/// x coordinate of circle center
 		double x = 0.0;
-		// y coordinate of circle center
+		/// y coordinate of circle center
 		double y = 0.0;
-		// radius of circle
+		/// radius of circle
 		double r = 1.0;
 	};	
 	
