@@ -10,6 +10,7 @@
 	<param name="odom_frame_id" value="odom"/>
 	<param name="body_frame_id" value="base_footprint"/>
 	<param name="robot_description" command="$(find xacro)/xacro $(find nuturtle_description)/urdf/turtlebot3_burger.urdf.xacro" /> 
+	<param name="max_num_landmarks" value="20"/>
 	
 	<!-- q_cov is ordered as [sigma_theta, sigma_x, sigma_y, sigma_xtheta, sigma_ytheta, sigma_xy] -->
 	<rosparam param="q_cov">[0.01, 0.03, 0.03, 0.002, 0.002, 0.002]</rosparam>

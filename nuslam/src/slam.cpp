@@ -11,7 +11,9 @@
 ///		q_cov (std::vector<double>): covariance matrix for odometry process noise
 ///		r_cov (std::vector<double>): covariance matrix for sensor noise
 ///		unknown_assoc (int): if true (1), subscribe to circles_detected and perform unknwon data association. if false (0) subscribe to fake_sensor and use landmark id's
-///		mahdst_thresh (double): mahalanobis distance threshold to define new landmark
+///		dst_thresh (double): distance threshold to define new landmark
+///		dst_metric (int): distance metric for data association: 1: mahalanobis, 2: euclidean
+///		max_num_landmarks (int): maximum number of landmarks to be tracked to initialize matrix sizes in code
 /// PUBLISHES:
 ///     odom (nav_msgs/Odometry): robot pose in the odom_frame_id frame, robot body velocity in body_frame_id
 ///		odom_path (nav_msgs/Path): robot path according to odometry only
@@ -70,10 +72,11 @@ static arma::Mat<double> Q_bar;
 
 static int unknown_assoc = 0;
 static int lm_seen = 0;
-static double mahdst_thresh = 1.0;
+static double dst_thresh = 1.0;
 
 static int times_seen_thresh = 50;
 static int count_to_last_thresh = 100;
+static int dst_metric = 1;
 
 
 /// \brief Updates internal odometry state, publishes a ROS odometry message, broadcast the transform between odometry and body frame on tf
@@ -135,14 +138,17 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 		Landmark lm = qe.front();  // get landmark
 		qe.pop();  // delete landmark from queue
 		
-		//TODO do data association here (start)
+		// do data association here (start)
 		if (unknown_assoc)
 		{
 			arma::Mat<double> Mcopy(M);  // make a copy of the landmarks matrix
 			Landmark lm_temp(lm.r, lm.phi, lm_seen+1);  // process incoming landmark as new landmark
 			initialize_landmark(t_mb, lm_temp, Mcopy);  // temporarily initialize_landmark
 			arma::Col<double> z = {lm_temp.r, lm_temp.phi};
-			std::vector<double> mahdst(lm_seen+1);  // vector of mahalanobis distance
+			std::vector<double> dst(lm_seen+1);  // vector of mahalanobis distance
+			//if using Euclidean distance for data association
+			Vector2D v1 = inv_meas(t_mb, lm_temp);
+			
 			for (int j=0; j<lm_seen+1; ++j)
 			{
 				if ((is_init[j]) || j == lm_seen)
@@ -152,19 +158,30 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 					arma::Mat<double> H = compute_Hj_mat(dx, dy, n_lm, j+1);  // compute Hk, the linearized measurement model
 					arma::Mat<double> psi = H*S*H.t() + R;  // compute the covariance
 					arma::Col<double> zh = compute_meas(t_mb, Mcopy, j+1);
-					arma::Col<double> delta_z = {z(0,0)-zh(0,0), normalize_angular_difference(z(1,0), zh(1,0))};
-					arma::Mat<double> dk = delta_z.t() * arma::inv(psi) * delta_z;  // compute mahalanobis distance
-					mahdst[j] = dk(0,0);  // matrix to double
+					
+					if (dst_metric == 1)  //if using mahalanobis distance for data association
+					{
+						arma::Col<double> delta_z = {z(0,0)-zh(0,0), normalize_angular_difference(z(1,0), zh(1,0))};
+						arma::Mat<double> dk = delta_z.t() * arma::inv(psi) * delta_z;  // compute mahalanobis distance
+						dst[j] = dk(0,0);  // matrix to double
+					}
+					else if (dst_metric == 2)  //if using Euclidean distance for data association
+					{
+						Landmark lm_j{zh(0,0),zh(1,0),0};
+						Vector2D v2 = inv_meas(t_mb, lm_j);
+						Vector2D vdiff = v1-v2;
+						dst[j] = magnitude(vdiff);
+					}
 				}
 			}
-			mahdst[lm_seen] = mahdst_thresh;  // set temporary landmark distance to threshold
+			dst[lm_seen] = dst_thresh;  // set temporary landmark distance to threshold
 			double dk_min = 100000; // arbitrarily high min distance for min-finding algorithm
 			int l=0;
 			for (int j=0; j<lm_seen+1; ++j)
 			{
 				if ((is_init[j]) || j == lm_seen)
 				{
-					double dk_current = mahdst[j];
+					double dk_current = dst[j];
 					if (dk_current < dk_min)
 					{
 						dk_min = dk_current;
@@ -205,7 +222,8 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 			}
 		}
 		
-		//TODO do data association here (end)
+		// data association end
+		
 		if (!(lm.id == -1))
 		{	
 			if (!is_slam[lm.id-1])  // landmark id's start from 1
@@ -361,7 +379,9 @@ int main(int argc, char** argv)
 	n.getParam("q_cov", q_cov);
 	n.getParam("r_cov", r_cov);
 	n.getParam("unknown_assoc", unknown_assoc);
-	n.getParam("mahdst_thresh", mahdst_thresh);
+	n.getParam("dst_thresh", dst_thresh);
+	n.getParam("dst_metric", dst_metric);
+	n.getParam("max_num_landmarks", n_lm);
 	
 	if (unknown_assoc)
 	{

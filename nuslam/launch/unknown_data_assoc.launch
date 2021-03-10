@@ -2,9 +2,10 @@
 <launch>
 	<arg name="robot" default="localhost" doc="the hostname of the turtlebot, localhost for simulation"/>
 	
-	<param name="unknown_assoc" value="1"/>
-	<param name="mahdst_thresh" value="1"/>
-	<param name="d_thresh" value="0.3"/>
+	<param name="unknown_assoc" value="0"/>
+	<param name="dst_thresh" value="0.4"/>  <!--1 works for dst_metric=1-->
+	<param name="dst_metric" value="2"/>
+	<param name="cluster_d_thresh" value="0.3"/>
 	<param name="min_cluster_n" value="5"/>
 	<param name="min_angle_mean" value="80"/>
 	<param name="max_angle_mean" value="160"/>
