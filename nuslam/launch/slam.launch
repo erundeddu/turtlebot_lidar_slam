@@ -10,7 +10,7 @@
 	<param name="odom_frame_id" value="odom"/>
 	<param name="body_frame_id" value="base_footprint"/>
 	<param name="robot_description" command="$(find xacro)/xacro $(find nuturtle_description)/urdf/turtlebot3_burger.urdf.xacro" /> 
-	<param name="max_num_landmarks" value="20"/>
+	<param name="max_num_landmarks" value="30"/>
 	
 	<!-- q_cov is ordered as [sigma_theta, sigma_x, sigma_y, sigma_xtheta, sigma_ytheta, sigma_xy] -->
 	<rosparam param="q_cov">[0.01, 0.03, 0.03, 0.002, 0.002, 0.002]</rosparam>
@@ -34,7 +34,7 @@
 		<node pkg="turtlebot3_teleop" type="turtlebot3_teleop_key" name="turtlebot3_teleop_keyboard" output="screen"/>
 	</group>
 	
-	<node machine="turtlebot" pkg="nuslam" type="slam" name="slam"/>
+	<node pkg="nuslam" type="slam" name="slam"/> <!--launch this on host for computational speed-->
 	<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" /> 
 	<node name="rviz" pkg="rviz" type="rviz" args="-d '$(find nuslam)/config/sim_slam.rviz'"/>
 </launch>

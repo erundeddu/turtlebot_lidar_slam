@@ -4,7 +4,7 @@
 	
 	<param name="unknown_assoc" value="1"/>
 	<param name="dst_thresh" value="0.4"/>  <!--1 works for dst_metric=1-->
-	<param name="dst_metric" value="2"/>
+	<param name="dst_metric" value="2"/>  <!-- 1 for mahalanobis distance, 2 for euclidean - change dst_thresh accordingly -->
 	<param name="cluster_d_thresh" value="0.3"/>
 	<param name="min_cluster_n" value="5"/>
 	<param name="min_angle_mean" value="80"/>
@@ -25,8 +25,8 @@
 		<include file="$(find nuslam)/launch/slam.launch">
 			<arg name="robot" value="$(arg robot)"/>
 		</include>
-		<node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 1 world map 100" />
-		<node pkg="tf" type="static_transform_publisher" name="link2_broadcaster" args="0 0 0 0 0 0 1 base_scan turtle 100" />
+		<node pkg="tf2_ros" type="static_transform_publisher" name="link2_broadcaster" args="0 0 0 0 0 0 1 world map" />
+		<node pkg="tf2_ros" type="static_transform_publisher" name="link3_broadcaster" args="0 0 0 0 0 0 1 base_scan turtle" />
 	</group>
 	
 	<node machine="turtlebot" pkg="nuslam" type="landmarks" name="landmarks"/>

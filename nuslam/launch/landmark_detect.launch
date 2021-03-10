@@ -20,7 +20,7 @@
 		<include file="$(find nuturtle_robot)/launch/odom_teleop.launch">
 			<arg name="circle" value="false"/>
 		</include>
-		<node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 1 base_scan turtle 100" />
+		<node pkg="tf2_ros" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 1 base_scan turtle" />
 	</group>
 		
 	<node machine="turtlebot" pkg="nuslam" type="landmarks" name="landmarks"/>

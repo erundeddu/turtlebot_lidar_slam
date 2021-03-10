@@ -28,8 +28,13 @@ roslaunch nuslam slam.launch robot:=localhost
 roslaunch nuslam landmark_detect.launch simulate:=true
 ```
 
-3. Unknown data association
+3. Unknown data association simulation
 ```
 roslaunch nuslam unknown_data_assoc.launch robot:=localhost
+```
+
+4. Unknown data association on the turtlebot
+```
+roslaunch nuslam unknown_data_assoc.launch robot:=turtlebot.local
 ```
 
