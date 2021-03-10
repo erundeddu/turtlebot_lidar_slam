@@ -6,15 +6,13 @@
 	<param name="min_cluster_n" value="5"/>
 	<param name="min_angle_mean" value="80"/>
 	<param name="max_angle_mean" value="160"/>
-	<param name="max_angle_std" value="0.3"/>
+	<param name="max_angle_std" value="0.15"/>
 	<param name="min_circle_radius" value="0.04"/>
 	<param name="max_circle_radius" value="0.10"/>
 	
 	<group if="$(arg simulate)">
 		<machine name="turtlebot" address="localhost" env-loader="/home/ubuntu/loader.sh"/>
-		<include file="$(find nurtlesim)/launch/start_sim.launch">
-			<!--arg name="robot" value="localhost"/-->
-		</include>
+		<include file="$(find nurtlesim)/launch/start_sim.launch"/>
 	</group>
 	
 	<group unless="$(arg simulate)">

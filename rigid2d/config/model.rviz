@@ -12,6 +12,7 @@ Panels:
         - /RobotModel1
         - /TF1
         - /Odometry1
+        - /Odometry1/Shape1
         - /MarkerArray1
       Splitter Ratio: 0.6029411554336548
     Tree Height: 385
@@ -184,6 +185,8 @@ Visualization Manager:
               base_scan:
                 laser:
                   {}
+                turtle:
+                  {}
               caster_back_link:
                 {}
               imu_link:
@@ -192,8 +195,6 @@ Visualization Manager:
                 {}
               wheel_right_link:
                 {}
-            turtle:
-              {}
       Update Interval: 0
       Value: true
     - Angle Tolerance: 0.10000000149011612
@@ -223,10 +224,10 @@ Visualization Manager:
         Axes Length: 1
         Axes Radius: 0.10000000149011612
         Color: 255; 25; 0
-        Head Length: 0.30000001192092896
-        Head Radius: 0.10000000149011612
-        Shaft Length: 1
-        Shaft Radius: 0.05000000074505806
+        Head Length: 0.029999999329447746
+        Head Radius: 0.009999999776482582
+        Shaft Length: 0.10000000149011612
+        Shaft Radius: 0.004999999888241291
         Value: Arrow
       Topic: /odom
       Unreliable: false
