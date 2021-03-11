@@ -43,4 +43,12 @@ GIF is at 4x speed. When the simulated robot approximately reaches its initial p
 ```
 roslaunch nuslam unknown_data_assoc.launch robot:=turtlebot.local
 ```
+![Unknown data association robot](images/unknown_assoc_robot.mp4)
+
+![Unknown data association rviz](images/unknown_assoc_rviz.png)
+
+GIF is at 4x speed. When the simulated robot approximately reaches its initial pose (0,0,0):
+* Final pose according to SLAM: (x,y,theta) = (-0.014, 0.025, -0.088)
+* Final pose according to odometry only: (x,y,theta) = (0.027, -0.003, 0.194)
+* The turtlebot odometry on a flat surface is good. Increase in performance with SLAM is moderate but still visible in the robot path and in the final orientation angle (between x,y,theta, it was easiest to control for a final angle of ~0)
 
