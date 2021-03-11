@@ -3,8 +3,8 @@
 	<arg name="use_rviz" default="true" doc="if true, launch rviz"/>
 	<param name="left_wheel_joint" value="wheel_left_joint"/>
 	<param name="right_wheel_joint" value="wheel_right_joint"/>
-	<param name="vx_noise" value="0.01"/>
-	<param name="w_noise" value="0.005"/>
+	<param name="vx_noise" value="0.005"/>
+	<param name="w_noise" value="0.01"/>
 	<param name="slip_max" value="0.15"/>
 	<rosparam param="x_tubes">[2, -2, -0.5, 1, 0.6, 1.2, 0]</rosparam>
 	<rosparam param="y_tubes">[2, 1.5, 0.2, 0.8, -0.3, -1, -0.5]</rosparam>

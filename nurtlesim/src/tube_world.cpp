@@ -82,12 +82,25 @@ void callback(const geometry_msgs::Twist::ConstPtr & msg)
 	static std::normal_distribution<> vx_gauss(0.0, vx_noise);
 	static std::normal_distribution<> w_gauss(0.0, w_noise);
 	// add noise to the linear twist
-	Vector2D v(msg -> linear.x + vx_gauss(get_random()), msg -> linear.y);
-	// add noise to the rotational twist
-	Twist2D tw(v, msg -> angular.z + w_gauss(get_random()));
-	// convert twist to wheel speeds
-	wv.l_vel = (dd.twist2WheelVel(tw)).l_vel;
-	wv.r_vel = (dd.twist2WheelVel(tw)).r_vel;
+	if ((almost_equal(msg -> linear.x, 0.0, 1e-4)) && (almost_equal(msg -> linear.y, 0.0, 1e-4)) && (almost_equal(msg -> angular.z, 0.0, 1e-4)))  // if all twist entries are zero, do not add noise
+	{
+		Vector2D v(msg -> linear.x, msg -> linear.y);
+		// add noise to the rotational twist
+		Twist2D tw(v, msg -> angular.z);
+		// convert twist to wheel speeds
+		wv.l_vel = (dd.twist2WheelVel(tw)).l_vel;
+		wv.r_vel = (dd.twist2WheelVel(tw)).r_vel;
+	}
+	else
+	{
+		Vector2D v(msg -> linear.x + vx_gauss(get_random()), msg -> linear.y);
+		// add noise to the rotational twist
+		Twist2D tw(v, msg -> angular.z + w_gauss(get_random()));
+		// convert twist to wheel speeds
+		wv.l_vel = (dd.twist2WheelVel(tw)).l_vel;
+		wv.r_vel = (dd.twist2WheelVel(tw)).r_vel;
+	}
+	
 }
 
 
