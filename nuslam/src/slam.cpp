@@ -51,13 +51,13 @@ static geometry_msgs::TransformStamped map2odom;
 static bool started(false);
 static std::queue<nuslam::Landmark> qe;
 static arma::Col<double> M;
-//static arma::Col<double> Mtemp;
 static nav_msgs::Path odom_path;
 static nav_msgs::Path slam_path;
 static std::vector<int> is_init;
 static std::vector<int> times_seen;
 static std::vector<int> is_slam;
 static std::vector<int> count_to_last;
+static std::queue<int> avail_index;
 static int n_lm = 20;  // maximum number of landmarks to track
 static geometry_msgs::PoseStamped pos;
 
@@ -142,16 +142,27 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 		if (unknown_assoc)
 		{
 			arma::Mat<double> Mcopy(M);  // make a copy of the landmarks matrix
-			Landmark lm_temp(lm.r, lm.phi, lm_seen+1);  // process incoming landmark as new landmark
+			int lm_idx = lm_seen;
+			
+			// start - use indices of M that correspond to measurements that were discarded
+			if (!avail_index.empty())
+			{
+				lm_idx = avail_index.front();
+				avail_index.pop();
+			}
+			// end
+			
+			
+			Landmark lm_temp(lm.r, lm.phi, lm_idx+1);  // process incoming landmark as new landmark
 			initialize_landmark(t_mb, lm_temp, Mcopy);  // temporarily initialize_landmark
 			arma::Col<double> z = {lm_temp.r, lm_temp.phi};
-			std::vector<double> dst(lm_seen+1);  // vector of mahalanobis distance
+			std::vector<double> dst(lm_seen+1);  // vector of mahalanobis distances
 			//if using Euclidean distance for data association
 			Vector2D v1 = inv_meas(t_mb, lm_temp);
 			
 			for (int j=0; j<lm_seen+1; ++j)
 			{
-				if ((is_init[j]) || j == lm_seen)
+				if ((is_init[j]) || j == lm_idx)
 				{
 					double dx = Mcopy(2*j,0) - t_mb.getX();
 					double dy = Mcopy(2*j+1,0) - t_mb.getY();
@@ -174,12 +185,12 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 					}
 				}
 			}
-			dst[lm_seen] = dst_thresh;  // set temporary landmark distance to threshold
+			dst[lm_idx] = dst_thresh;  // set temporary landmark distance to threshold
 			double dk_min = 100000; // arbitrarily high min distance for min-finding algorithm
 			int l=0;
 			for (int j=0; j<lm_seen+1; ++j)
 			{
-				if ((is_init[j]) || j == lm_seen)
+				if ((is_init[j]) || j == lm_idx)
 				{
 					double dk_current = dst[j];
 					if (dk_current < dk_min)
@@ -200,16 +211,16 @@ void callback(const sensor_msgs::JointState::ConstPtr & msg)
 				else
 				{
 					count_to_last[j] += 1; 
-					if ((count_to_last[j] > count_to_last_thresh) && (!is_slam[j]))  // if temporary and not seen for a while: remove
+					if ((count_to_last[j] > count_to_last_thresh) && (!is_slam[j]) && (is_init[j]))  // if temporary and not seen for a while: remove
 					{
 						is_init[j] = 0;
 						times_seen[j] = 0;
+						avail_index.push(j);
 					}
 				}
-				
 			}			
 			
-			if (l == lm_seen)  // if this is a new landmark
+			if (l == lm_seen)  // if this is a new landmark at the last index
 			{
 				if (l < n_lm-1)  // condition to ensure that the matrix M does not fill up
 				{
