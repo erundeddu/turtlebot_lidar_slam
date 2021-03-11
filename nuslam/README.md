@@ -33,6 +33,7 @@ roslaunch nuslam landmark_detect.launch simulate:=true
 roslaunch nuslam unknown_data_assoc.launch robot:=localhost
 ```
 ![Unknown data association simulation](images/unknown_assoc_sim.gif)
+
 GIF is at 4x speed. When the simulated robot approximately reaches its initial pose (0,0,0):
 * Final pose according to SLAM: (x,y,theta) = (0.009, -0.049, 0.032)
 * Final pose according to odometry only: (x,y,theta) = (0.047, -0.994, 0.047) 
