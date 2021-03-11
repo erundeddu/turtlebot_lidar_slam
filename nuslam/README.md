@@ -37,6 +37,7 @@ roslaunch nuslam unknown_data_assoc.launch robot:=localhost
 GIF is at 4x speed. When the simulated robot approximately reaches its initial pose (0,0,0):
 * Final pose according to SLAM: (x,y,theta) = (0.009, -0.049, 0.032)
 * Final pose according to odometry only: (x,y,theta) = (0.047, -0.994, 0.047) 
+The path according to SLAM (blue) closely matches the true path (green), while the odometry-only path (red) loses accuracy early in the simulation.
 
 4. Unknown data association on the turtlebot
 ```
