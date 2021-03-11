@@ -13,7 +13,7 @@
 	<param name="max_num_landmarks" value="30"/>
 	
 	<!-- q_cov is ordered as [sigma_theta, sigma_x, sigma_y, sigma_xtheta, sigma_ytheta, sigma_xy] -->
-	<rosparam param="q_cov">[0.01, 0.03, 0.03, 0.002, 0.002, 0.002]</rosparam>
+	<rosparam param="q_cov">[0.03, 0.05, 0.05, 0.003, 0.003, 0.005]</rosparam>
 	<!-- r_cov is ordered as [sigma_x, sigma_y, sigma_xy] -->
 	<rosparam param="r_cov">[0.01, 0.01, 0.001]</rosparam>
 	

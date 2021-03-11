@@ -58,8 +58,8 @@
 static rigid2d::DiffDrive dd;	
 static rigid2d::WheelVel wv;
 // Noise parameters
-static double vx_noise = 0.01;
-static double w_noise = 0.01;
+static double vx_noise = 0.0001;
+static double w_noise = 0.0001;
 
 /// \brief Seeds the random number generation once
 /// \return a reference to the pseudo-random number generator object

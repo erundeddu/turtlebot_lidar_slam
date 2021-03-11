@@ -91,7 +91,7 @@ namespace nuslam
 	
 	arma::Mat<double> initialize_S(double n_lm)
 	{								
-		arma::Mat<double> S = {arma::join_cols(arma::join_rows(arma::zeros(3,3), arma::zeros(3,2*n_lm)), arma::join_rows(arma::zeros(2*n_lm,3), 10000*arma::eye(2*n_lm,2*n_lm)))};
+		arma::Mat<double> S = {arma::join_cols(arma::join_rows(arma::zeros(3,3), arma::zeros(3,2*n_lm)), arma::join_rows(arma::zeros(2*n_lm,3), 1.0e20*arma::eye(2*n_lm,2*n_lm)))};
 		return S;
 	}
 	

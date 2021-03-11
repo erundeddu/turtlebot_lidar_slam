@@ -5,7 +5,7 @@
 * Compatible with nurtlesim simulation or with real turtlebot
 * Detection of obstacle tubes from radar scan data through regression
 * Use either known or unknown data association for SLAM
-# Example Usage
+# Example Usage and results
 1. Known data association
 ```
 roslaunch nuslam slam.launch robot:=localhost
@@ -32,6 +32,10 @@ roslaunch nuslam landmark_detect.launch simulate:=true
 ```
 roslaunch nuslam unknown_data_assoc.launch robot:=localhost
 ```
+![Unknown data association simulation](images/unknown_assoc_sim.gif)
+GIF is at 4x speed. When the simulated robot approximately reaches its initial pose (0,0,0):
+* Final pose according to SLAM: (x,y,theta) = (0.009, -0.049, 0.032)
+* Final pose according to odometry only: (x,y,theta) = (0.047, -0.994, 0.047) 
 
 4. Unknown data association on the turtlebot
 ```
