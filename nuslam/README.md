@@ -43,7 +43,7 @@ GIF is at 4x speed. When the simulated robot approximately reaches its initial p
 ```
 roslaunch nuslam unknown_data_assoc.launch robot:=turtlebot.local
 ```
-![Unknown data association robot](images/unknown_assoc_robot.mp4)
+![Unknown data association robot](images/unknown_assoc_robot.gif)
 
 ![Unknown data association rviz](images/unknown_assoc_rviz.png)
 
